@@ -1,0 +1,206 @@
+/* ═══════════════════════════════════════════════════════════════
+   상단바 구분 — 상단 네비게이션 바 + 단축(top-bar) 바
+═══════════════════════════════════════════════════════════════ */
+
+
+/* ── 상단 네비게이션 바 (top-nav) ── */
+/* ── 상단 네비게이션 바 ── */
+.top-nav {
+    display: flex;
+    align-items: stretch;
+    background: #0d1117;
+    height: 58px;
+    padding: 0 28px;
+    gap: 32px;
+    flex-shrink: 0;
+    z-index: 200;
+}
+
+.nav-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.nav-logo {
+    display: flex;
+    align-items: center;
+    color: #fff;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.nav-links {
+    display: flex;
+    align-items: stretch;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.nav-item {
+    color: rgba(255, 255, 255, 0.45);
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color 0.25s ease;
+    user-select: none;
+}
+
+.nav-item:hover {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.nav-item.active {
+    color: #4fc3f7;
+    font-weight: 700;
+}
+
+/* 슬라이딩 언더바 */
+.nav-indicator {
+    position: absolute;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #29b6f6, #4fc3f7);
+    border-radius: 3px 3px 0 0;
+    transition: left 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(79, 195, 247, 0.55);
+}
+
+/* 우측 영역 */
+.nav-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+}
+
+.nav-greeting {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.38);
+    white-space: nowrap;
+}
+
+.nav-greeting span {
+    color: rgba(255, 255, 255, 0.62);
+    font-weight: 600;
+}
+
+.nav-settings-btn {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.nav-settings-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.nav-logout-btn {
+    background: rgba(239, 83, 80, 0.1);
+    border: 1px solid rgba(239, 83, 80, 0.35);
+    color: #ef5350;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.nav-logout-btn:hover {
+    background: rgba(239, 83, 80, 0.24);
+}
+
+/* 기존 사이드바 스타일 — 더 이상 사용 안 함 */
+.sidebar { display: none; }
+.logout-btn { display: none; }
+
+/* ── 단축 바 (top-bar) ── */
+.top-bar {
+    background: #0d1117;
+    padding: 0 28px;
+    height: 46px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-shrink: 0;
+    gap: 0;
+}
+
+.view-title { display: none; }
+
+.top-bar-actions {
+    display: flex;
+    align-items: stretch;
+    position: relative;
+    gap: 0;
+}
+
+.topbar-shortcut-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0 22px;
+    cursor: pointer;
+    transition: color 0.25s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    position: relative;
+    user-select: none;
+}
+.topbar-shortcut-btn:hover {
+    color: rgba(255, 255, 255, 0.78);
+    background: none;
+}
+.topbar-shortcut-btn.active {
+    color: #4fc3f7;
+    font-weight: 700;
+}
+/* 활성 탭 언더라인 — nav-indicator 와 동일 스타일 */
+.topbar-shortcut-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #29b6f6, #4fc3f7);
+    border-radius: 3px 3px 0 0;
+    box-shadow: 0 0 8px rgba(79, 195, 247, 0.55);
+}

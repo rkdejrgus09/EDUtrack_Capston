@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <title>에듀트랙 - 분석 리포트 상세</title>
+    <link rel="stylesheet" href="../css/detail_style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="report-container" id="reportArea">
+        <div class="report-header">
+            <h1>EduTrack Analysis Report</h1>
+            <div id="reportDate">2026-04-13</div>
+        </div>
+        <div class="section">
+            <div class="section-title">학생 정보</div>
+            <p>이름: <strong id="studentName">김철수</strong></p>
+        </div>
+        <div class="section">
+            <div class="section-title">AI 역량 키워드</div>
+            <div id="keywordContainer"></div>
+        </div>
+        <div class="section">
+            <div class="section-title">학습 취약점 분석</div>
+            <div id="weaknessContainer" class="weakness-box">데이터 로딩 중...</div>
+        </div>
+    </div>
+    <div style="text-align:center; margin-top:20px;">
+        <button class="pdf-btn" id="pdfBtn">PDF 리포트 다운로드</button>
+    </div>
+    <script type="module" src="../backend/detail_logic.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <title>EduTrack Admin - 관리자 센터</title>
+
+    <!-- 교사 대시보드와 동일한 UI 재사용 (로드 순서 = cascade 순서) -->
+    <link rel="stylesheet" href="../css/dashboard_base.css">    <!-- 공통 베이스 -->
+    <link rel="stylesheet" href="../css/dashboard_topbar.css">  <!-- 상단바 -->
+    <link rel="stylesheet" href="../css/dashboard_dark.css">    <!-- 테마 오버라이드 -->
+    <link rel="stylesheet" href="../css/admin_style.css">       <!-- 관리자 전용 요소 -->
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() { emailjs.init("AOdCTz3PgROEk3qI0"); })();
+    </script>
+</head>
+<body>
+    <div id="main-wrapper">
+
+        <!-- ── 상단 네비게이션 바 ── -->
+        <nav class="top-nav">
+            <div class="nav-left">
+                <div class="nav-logo">EduTrack <span class="nav-logo-tag">Admin</span></div>
+            </div>
+            <div class="nav-right">
+                <div class="nav-greeting">반갑습니다, <span>관리자</span> 님</div>
+                <button class="nav-logout-btn" id="logoutBtn" title="로그아웃">↩</button>
+            </div>
+        </nav>
+
+        <div class="main-content">
+
+            <!-- ── 섹션 탭 (단축 바) ── -->
+            <div class="top-bar">
+                <div class="top-bar-actions">
+                    <button class="topbar-shortcut-btn active" id="nav-overView" onclick="showSection('overView')">📊 운영 현황</button>
+                    <button class="topbar-shortcut-btn" id="nav-approvalView" onclick="showSection('approvalView')">✅ 교사 가입 승인 <span class="admin-badge" id="pending-count">0</span></button>
+                </div>
+            </div>
+
+            <!-- ── 운영 현황 ── -->
+            <div id="overView" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card"><h3>전체 가입 교사</h3><p>124명</p></div>
+                    <div class="stat-card"><h3>승인 대기</h3><p class="text-danger" id="pending-stat">0명</p></div>
+                </div>
+                <div class="card">
+                    <h3>📢 시스템 공지 관리</h3>
+                    <textarea placeholder="교사 대시보드에 띄울 공지를 입력하세요..."></textarea>
+                    <button class="btn btn-primary">공지 배포</button>
+                </div>
+            </div>
+
+            <!-- ── 교사 가입 승인 ── -->
+            <div id="approvalView" class="content-section">
+                <div class="card">
+                    <h3>🔔 신규 가입 승인 요청</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>신청일</th>
+                                <th>이메일</th>
+                                <th>상태</th>
+                                <th>증빙 서류</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approval-list">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module" src="../backend/admin_script.js"></script>
+</body>
+</html>

@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <title>에듀트랙 - 학생 시험 응시</title>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Pretendard', -apple-system, sans-serif; background-color: #F2F4F6; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* 학생 입장(로그인) 오버레이 화면 */
+        .login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
+            padding: 20px; box-sizing: border-box;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 20px;
+            width: 100%; max-width: 350px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+        }
+        .login-box h2 { margin-top: 0; color: #191F28; margin-bottom: 10px; }
+        .login-box p { color: #6B7684; font-size: 14px; margin-bottom: 25px; }
+        .login-input {
+            width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #D1D6DB;
+            border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none;
+        }
+        .login-input:focus { border-color: #3182F6; }
+        .login-btn {
+            width: 100%; padding: 15px; background: #3182F6; color: white; border: none;
+            border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .login-btn:hover { background: #1B64DA; }
+
+        /* 상단 바 */
+        .top-bar { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; flex-shrink: 0; gap: 12px; }
+        .top-bar h2 { margin: 0; color: #191F28; font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .student-info { background: #E8F3FF; color: #3182F6; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; white-space: nowrap; flex-shrink: 0; }
+        .timer-display { background: #FFF3E0; color: #E65100; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 15px; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+        .timer-display.urgent { background: #FFEBEE; color: #C62828; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        /* 좌우 분할 컨테이너 */
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+
+        /* 좌측: 시험지 영역 */
+        .test-paper-section { flex: 6; background: #e9ecef; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; position: relative; }
+        .test-image { max-width: 100%; height: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; display: none; }
+
+        /* PDF 뷰어 */
+        #pdfCanvas { max-width: 100%; height: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; display: none; }
+        #pdfStatus { display: none; color: #6B7684; font-size: 14px; padding: 40px 0; text-align: center; }
+        .pdf-page-nav { display: none; align-items: center; gap: 12px; margin-top: 12px; background: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        /* 핀치 줌 */
+        #zoomWrapper { width: 100%; display: flex; flex-direction: column; align-items: center; transform-origin: 0 0; will-change: transform; }
+        #zoomResetBtn { display: none; position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.58); color: #fff; border: none; border-radius: 16px; padding: 6px 13px; font-size: 12px; font-weight: 600; cursor: pointer; z-index: 20; touch-action: manipulation; }
+        #zoomHint { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.55); color: #fff; padding: 7px 16px; border-radius: 20px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.4s; z-index: 20; white-space: nowrap; }
+        .pdf-page-nav button { background: #3182F6; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .pdf-page-nav button:disabled { background: #D1D6DB; cursor: not-allowed; }
+        .pdf-page-nav button:not(:disabled):hover { background: #1B64DA; }
+        .pdf-page-indicator { font-size: 13px; color: #4E5968; font-weight: 600; min-width: 70px; text-align: center; }
+
+        /* 우측: OMR 라디오 버튼 영역 */
+        .omr-section { flex: 4; background: white; padding: 30px; box-shadow: -5px 0 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; overflow-y: auto; }
+        .omr-title { margin-top: 0; color: #191F28; border-bottom: 2px solid #191F28; padding-bottom: 10px; margin-bottom: 20px; }
+        .omr-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #E5E8EB; }
+        .q-num { font-weight: bold; font-size: 18px; color: #3182F6; width: 40px; flex-shrink: 0; }
+
+        /* 동그라미 라디오 버튼 디자인 */
+        .radio-group { display: flex; gap: 10px; }
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group label { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #D1D6DB; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; color: #4E5968; cursor: pointer; transition: 0.2s; background: white; }
+        .radio-group input[type="radio"]:checked + label { background-color: #3182F6; border-color: #3182F6; color: white; }
+
+        /* 제출 버튼 (데스크톱용) */
+        .submit-btn { margin-top: 30px; background-color: #3182F6; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(49, 130, 246, 0.3); width: 100%; box-sizing: border-box; }
+        .submit-btn:hover { background-color: #1B64DA; }
+
+        /* 모바일 이전/다음/제출 네비게이션 - 데스크톱에서는 숨김 */
+        .omr-nav { display: none; }
+
+        /* ── 모바일 반응형 (768px 이하) ── */
+        @media (max-width: 768px) {
+            body { height: 100dvh; overflow: hidden; }
+
+            .login-box { padding: 28px 20px; }
+            .login-box h2 { font-size: 18px; }
+
+            .top-bar { padding: 12px 16px; }
+            .top-bar h2 { font-size: 15px; }
+            .student-info { font-size: 12px; padding: 6px 10px; }
+
+            /* 세로 단일 컬럼 전환 */
+            .main-container { flex-direction: column; overflow: hidden; }
+
+            /* 시험지 영역 — 60% 비율로 고정해 OMR이 잘리지 않게 */
+            .test-paper-section {
+                flex: 6;
+                width: 100%;
+                min-height: 0;
+                padding: 10px;
+                box-sizing: border-box;
+                align-items: center;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .test-image { max-width: 100%; height: auto; }
+            #pdfCanvas { max-width: 100%; height: auto; }
+            .pdf-page-nav { margin-top: 8px; }
+
+            /* OMR 영역 — 40% 비율로 항상 화면 안에 표시 */
+            .omr-section {
+                flex: 4;
+                width: 100%;
+                min-height: 0;
+                padding: 10px 16px 12px;
+                box-sizing: border-box;
+                box-shadow: none;
+                border-top: 1px solid #E5E8EB;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .omr-title { padding-bottom: 6px; margin-bottom: 10px; }
+            .omr-row { padding: 8px 0; }
+            .q-num { font-size: 16px; width: 34px; }
+
+            /* 터치 영역 확보 */
+            .radio-group { gap: 6px; }
+            .radio-group label { width: 44px; height: 44px; font-size: 16px; }
+
+            /* 모바일에서 데스크톱 제출 버튼 숨기고 네비게이션 표시 */
+            .submit-btn { display: none; }
+            .omr-nav {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 8px;
+            }
+            .page-indicator {
+                flex: 1;
+                text-align: center;
+                font-size: 12px;
+                color: #6B7684;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            .nav-btn {
+                padding: 11px 12px;
+                border: none;
+                border-radius: 10px;
+                font-size: 13px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: 0.2s;
+                white-space: nowrap;
+            }
+            .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+            .prev-btn { background: #E5E8EB; color: #4E5968; }
+            .prev-btn:not(:disabled):hover { background: #D1D6DB; }
+            .next-btn { background: #3182F6; color: white; }
+            .next-btn:hover { background: #1B64DA; }
+            .submit-nav-btn { background: #3182F6; color: white; }
+            .submit-nav-btn:hover { background: #1B64DA; }
+        }
+
+        /* ── 소형 모바일 (380px 이하) ── */
+        @media (max-width: 380px) {
+            .radio-group { gap: 4px; }
+            .radio-group label { width: 40px; height: 40px; font-size: 14px; }
+            .nav-btn { padding: 10px 10px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="studentLoginOverlay" class="login-overlay">
+        <div class="login-box">
+            <h2>에듀트랙 학생 접속</h2>
+            <p>본인의 학년, 반, 번호, 이름을 정확히 입력하세요.</p>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="stdGrade" class="login-input" placeholder="학년 (예: 2)" style="width: 50%;">
+                <input type="number" id="stdClass" class="login-input" placeholder="반 (예: 1)" style="width: 50%;">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="stdNumber" class="login-input" placeholder="번호 (예: 15)" style="width: 40%;" min="1" max="40">
+                <input type="text" id="stdName" class="login-input" placeholder="이름 (예: 홍길동)" style="width: 60%;">
+            </div>
+            <button class="login-btn" onclick="enterStudentRoom()">시험 방 입장하기</button>
+        </div>
+    </div>
+
+    <div class="top-bar">
+        <h2 id="subject-title">선생님의 시험 배포를 기다리는 중...</h2>
+        <div id="timerDisplay" class="timer-display" style="display:none;">⏱ --:--</div>
+        <div class="student-info" id="displayStudentInfo">👤 정보 입력 대기중</div>
+    </div>
+
+    <!-- 재응시 차단 오버레이 -->
+    <div id="examBlockedOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.82); backdrop-filter:blur(4px); z-index:9997; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+        <div style="background:white; border-radius:24px; padding:40px 32px; text-align:center; max-width:340px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h2 style="margin:0 0 6px; color:#191F28; font-size:20px;">재응시 불가</h2>
+            <p id="examBlockedMsg" style="color:#6B7684; margin:0 0 24px; font-size:14px; line-height:1.6;"></p>
+            <div style="background:#FFF3E0; border-radius:12px; padding:14px 16px; font-size:13px; color:#E65100; line-height:1.6;">
+                선생님께 문의하여 재응시 허용을 받으세요.
+            </div>
+            <button onclick="window.close()" style="margin-top:20px; width:100%; padding:14px; background:#F2F4F6; color:#4E5968; border:none; border-radius:12px; font-size:15px; font-weight:bold; cursor:pointer;">나가기</button>
+        </div>
+    </div>
+
+    <!-- 시험 종료 오버레이 -->
+    <div id="examEndOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.82); backdrop-filter:blur(4px); z-index:9998; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+        <div style="background:white; border-radius:24px; padding:40px 32px; text-align:center; max-width:340px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:56px; margin-bottom:12px;">✅</div>
+            <h2 style="margin:0 0 6px; color:#191F28; font-size:22px;">시험 종료</h2>
+            <p style="color:#8B95A1; margin:0 0 28px; font-size:14px;">답안이 성공적으로 제출되었습니다</p>
+            <div id="examEndScore" style="font-size:52px; font-weight:bold; color:#3182F6; line-height:1;">-</div>
+            <div style="font-size:13px; color:#8B95A1; margin:6px 0 28px;">내 점수</div>
+            <div style="background:#F2F4F6; border-radius:12px; padding:14px 16px; font-size:13px; color:#4E5968; line-height:1.6;">
+                📋 선생님의 안내를 기다려 주세요.
+            </div>
+            <button onclick="window.close()" style="margin-top:20px; width:100%; padding:14px; background:#3182F6; color:white; border:none; border-radius:12px; font-size:15px; font-weight:bold; cursor:pointer;">나가기</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="test-paper-section">
+            <div id="zoomWrapper">
+                <img id="testImage" src="" alt="시험지 원본" class="test-image" style="display:none">
+                <div id="pdfStatus"></div>
+                <canvas id="pdfCanvas"></canvas>
+            </div>
+            <div class="pdf-page-nav" id="pdfPageNav">
+                <button id="pdfPrevBtn" onclick="pdfGoPage(-1)" disabled>◀ 이전</button>
+                <span class="pdf-page-indicator" id="pdfPageIndicator">1 / 1</span>
+                <button id="pdfNextBtn" onclick="pdfGoPage(1)" disabled>다음 ▶</button>
+            </div>
+            <div class="pdf-page-nav" id="imgPageNav" style="display:none;">
+                <button id="imgPrevBtn" onclick="imgGoPage(-1)" disabled>◀ 이전</button>
+                <span class="pdf-page-indicator" id="imgPageIndicator">1 / 1</span>
+                <button id="imgNextBtn" onclick="imgGoPage(1)" disabled>다음 ▶</button>
+            </div>
+            <button id="zoomResetBtn">✕ 원래 크기</button>
+            <div id="zoomHint">🔍 두 손가락으로 확대할 수 있어요</div>
+        </div>
+
+        <div class="omr-section">
+            <h3 class="omr-title">📝 디지털 OMR 답안지</h3>
+            <div id="omr-container"></div>
+
+            <!-- 모바일 전용 이전/다음/제출 네비게이션 -->
+            <div class="omr-nav">
+                <button id="prevBtn" class="nav-btn prev-btn" onclick="prevPage()" disabled>◀ 이전</button>
+                <span id="pageIndicator" class="page-indicator">-</span>
+                <button id="nextBtn" class="nav-btn next-btn" onclick="nextPage()">다음 ▶</button>
+                <button id="submitNavBtn" class="nav-btn submit-nav-btn" onclick="submitTest()" style="display:none;">제출</button>
+            </div>
+
+            <!-- 데스크톱 전용 제출 버튼 -->
+            <button class="submit-btn" onclick="submitTest()">답안 제출하기</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        // 반드시 import 이후에 설정 (모듈 스크립트는 classic script 완료 후 실행되므로 pdfjsLib 사용 가능)
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+        import { getFirestore, collection, query, where, addDoc, onSnapshot, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // 🌟 학생용 화면도 새 프로젝트(bfd57) 하나로 완벽 통일!
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzi7vvF4A5E_Mg9SMJrZZ8Z7RMCxgLcc4",
+            authDomain: "edutrack-bfd57.firebaseapp.com",
+            projectId: "edutrack-bfd57",
+            storageBucket: "edutrack-bfd57.firebasestorage.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentSubject = "";
+        let currentTestId = "";
+        let teacherAnswers = {};
+        let loggedInStudentName = "";
+        let loggedInStudentGrade = "";
+        let loggedInStudentClass = "";
+        let loggedInStudentNumber = ""; // 동명이인 구분용 출석번호
+
+        // 세션 ID 생성: 학년_반_이름_번호_시험ID — 번호까지 포함해 동명이인을 구분한다
+        const makeSessionId = (testId) =>
+            `${loggedInStudentGrade}_${loggedInStudentClass}_${loggedInStudentName}_${loggedInStudentNumber}_${testId}`;
+
+        // 🚨 부정행위 통제용 변수
+        let cheatCount = 0;
+        let isProcessingCheating = false;
+        let cheatCooldown = false;
+
+        // ── 페이지 이탈 경고 ──
+        function handleBeforeUnload(e) {
+            e.preventDefault();
+            e.returnValue = ''; // 브라우저 기본 경고 팝업 표시
+        }
+        function enableLeaveWarning()  { window.addEventListener('beforeunload', handleBeforeUnload); }
+        function disableLeaveWarning() { window.removeEventListener('beforeunload', handleBeforeUnload); }
+
+        // ── 재응시 방지 세션 상태 ──
+        // examActive: 이번 페이지 로드에서 이미 세션이 활성화됐는지 여부
+        // activatedSubject: 활성화된 시험의 과목명 (과목이 바뀌면 새로 체크)
+        let examActive = false;
+        let activatedSubject = null;
+        const SESSION_COL = 'exam_sessions';
+
+        function showBlockedOverlay(status) {
+            disableLeaveWarning(); // 차단 상태에선 이탈 경고 불필요
+            const msg = document.getElementById('examBlockedMsg');
+            msg.textContent = status === 'submitted'
+                ? '이미 답안을 제출한 시험입니다. 중복 응시는 허용되지 않습니다.'
+                : '시험 도중 이탈이 감지되어 재입장이 차단되었습니다.';
+            document.getElementById('examBlockedOverlay').style.display = 'flex';
+        }
+
+        // ── PDF 상태 ──
+        let pdfDoc = null;
+        let pdfCurrentPage = 1;
+        let pdfTotalPages = 0;
+
+        // ── 타이머 상태 ──
+        let timerInterval = null;
+        let timerStarted = false;
+
+        function startTimer(minutes) {
+            if (timerStarted || minutes <= 0) return;
+            timerStarted = true;
+
+            let remaining = minutes * 60;
+            const display = document.getElementById('timerDisplay');
+            display.style.display = '';
+
+            const tick = () => {
+                const m = Math.floor(remaining / 60);
+                const s = remaining % 60;
+                display.textContent = `⏱ ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                display.classList.toggle('urgent', remaining <= 60);
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    display.textContent = '⏱ 시간 종료';
+                    alert('⏰ 제한 시간이 종료되어 자동으로 답안이 제출됩니다.');
+                    submitTest();
+                    return;
+                }
+                remaining--;
+            };
+
+            tick();
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        // ── 모바일 페이지네이션 상태 ──
+        const QUESTIONS_PER_PAGE = 2;
+        let currentPage = 0;
+        let totalPages = 0;
+
+        const isMobile = () => window.innerWidth <= 768;
+
+        window.enterStudentRoom = () => {
+            const grade = document.getElementById('stdGrade').value;
+            const cls = document.getElementById('stdClass').value;
+            const name = document.getElementById('stdName').value;
+            const number = document.getElementById('stdNumber').value;
+
+            if(!grade || !cls || !name || !number) return alert("학년, 반, 번호, 이름을 모두 입력해주세요!");
+
+            loggedInStudentGrade = grade;
+            loggedInStudentClass = cls;
+            loggedInStudentName = name;
+            loggedInStudentNumber = number;
+
+            document.getElementById('displayStudentInfo').innerText = `👤 ${grade}학년 ${cls}반 ${number}번 ${name}`;
+            document.getElementById('studentLoginOverlay').style.display = 'none';
+
+            cheatCount = 0;
+            isProcessingCheating = false;
+            cheatCooldown = false;
+
+            // 새 입장 시 세션 상태 초기화 (재입장 체크를 다시 수행하도록)
+            examActive = false;
+            activatedSubject = null;
+
+            enableLeaveWarning(); // 시험 중 탭 닫기/이탈 경고 활성화
+            listenLatestTest();
+        };
+
+        // 앱 연동: URL 파라미터로 학생 정보 자동 입력 (?name=홍길동&grade=2&class=1&number=15)
+        // window.load 이후 실행하여 모듈(student_test_logic.js)의 enterStudentRoom을 사용
+        window.addEventListener('load', function autoLoginFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const autoName   = params.get('name');
+            const autoGrade  = params.get('grade');
+            const autoClass  = params.get('class');
+            const autoNumber = params.get('number');
+            if (autoName && autoGrade && autoClass) {
+                document.getElementById('stdGrade').value  = autoGrade;
+                document.getElementById('stdClass').value  = autoClass;
+                document.getElementById('stdName').value   = autoName;
+                if (autoNumber) document.getElementById('stdNumber').value = autoNumber;
+                // 번호까지 있어야 자동 입장. 번호가 없으면 정보만 채우고 학생이 번호 입력 후 입장.
+                if (autoNumber) window.enterStudentRoom();
+            }
+        });
+
+        // ── 다중 이미지 뷰어 ──
+        let imgUrls = [];
+        let imgCurrentPage = 0;
+
+        function loadImages(urls) {
+            imgUrls = urls;
+            imgCurrentPage = 0;
+            document.getElementById('pdfCanvas').style.display = 'none';
+            document.getElementById('pdfStatus').style.display = 'none';
+            document.getElementById('pdfPageNav').style.display = 'none';
+            showImagePage(0);
+            const nav = document.getElementById('imgPageNav');
+            if (nav) nav.style.display = urls.length > 1 ? 'flex' : 'none';
+            showZoomHint();
+        }
+
+        function showImagePage(idx) {
+            const img = document.getElementById('testImage');
+            const status = document.getElementById('pdfStatus');
+
+            img.style.display = 'none';
+            status.style.color = '#6B7684';
+            status.textContent = '시험지 이미지 로딩 중...';
+            status.style.display = 'block';
+
+            img.onload = function() {
+                status.style.display = 'none';
+                img.style.display = 'block';
+                void document.getElementById('zoomWrapper').offsetHeight;
+            };
+            img.onerror = function() {
+                status.textContent = '이미지를 불러올 수 없습니다. 네트워크를 확인하고 새로고침해주세요.';
+                status.style.color = '#E53E3E';
+            };
+            img.src = imgUrls[idx];
+
+            imgCurrentPage = idx;
+            document.getElementById('imgPageIndicator').textContent = `${idx + 1} / ${imgUrls.length}`;
+            document.getElementById('imgPrevBtn').disabled = idx <= 0;
+            document.getElementById('imgNextBtn').disabled = idx >= imgUrls.length - 1;
+        }
+
+        window.imgGoPage = (delta) => {
+            const next = imgCurrentPage + delta;
+            if (next >= 0 && next < imgUrls.length) showImagePage(next);
+        };
+
+        // ── PDF 렌더링 (PDF.js + fetch ArrayBuffer — CORS 설정 후 동작) ──
+        async function renderPDFPage(pageNum) {
+            if (!pdfDoc) return;
+            const page = await pdfDoc.getPage(pageNum);
+            const canvas = document.getElementById('pdfCanvas');
+
+            // devicePixelRatio: 모바일은 보통 2~3. 이 값을 반영해야 고해상도 렌더링됨.
+            const dpr      = window.devicePixelRatio || 1;
+            const cssWidth = Math.max(canvas.parentElement.clientWidth - 20, 200);
+            const base     = page.getViewport({ scale: 1 });
+
+            // 렌더링 해상도 = CSS 폭 기준 스케일 × dpr (물리 픽셀 밀도 반영)
+            const viewport = page.getViewport({ scale: (cssWidth / base.width) * dpr });
+
+            // 캔버스 내부 버퍼는 물리 픽셀 크기로
+            canvas.width  = viewport.width;
+            canvas.height = viewport.height;
+            // CSS 표시 크기는 CSS 픽셀로 명시 — 브라우저가 임의로 늘려 흐리게 만드는 것을 방지
+            canvas.style.width  = cssWidth + 'px';
+            canvas.style.height = Math.round(viewport.height / dpr) + 'px';
+
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            pdfCurrentPage = pageNum;
+            document.getElementById('pdfPageIndicator').textContent = `${pdfCurrentPage} / ${pdfTotalPages}`;
+            document.getElementById('pdfPrevBtn').disabled = pdfCurrentPage <= 1;
+            document.getElementById('pdfNextBtn').disabled = pdfCurrentPage >= pdfTotalPages;
+        }
+
+        async function loadPDF(url) {
+            const statusEl = document.getElementById('pdfStatus');
+            const canvas   = document.getElementById('pdfCanvas');
+            const pageNav  = document.getElementById('pdfPageNav');
+            statusEl.style.color = '#6B7684';
+            statusEl.textContent = '📄 시험지 다운로드 중...';
+            statusEl.style.display = 'block';
+            canvas.style.display = 'none';
+            pageNav.style.display = 'none';
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                statusEl.textContent = '📄 시험지 렌더링 중...';
+                const buffer = await res.arrayBuffer();
+                const task = pdfjsLib.getDocument({ data: new Uint8Array(buffer), disableRange: true, disableStream: true });
+                pdfDoc = await task.promise;
+                pdfTotalPages = pdfDoc.numPages;
+                pdfCurrentPage = 1;
+                statusEl.style.display = 'none';
+                canvas.style.display = 'block';
+                if (pdfTotalPages > 1) pageNav.style.display = 'flex';
+                await renderPDFPage(1);
+                showZoomHint();
+            } catch (err) {
+                statusEl.style.color = '#C62828';
+                statusEl.textContent = '⚠️ 시험지를 불러올 수 없습니다. 선생님께 문의하세요. (' + err.message + ')';
+                console.error('PDF 로드 오류:', err);
+            }
+        }
+
+        window.pdfGoPage = async (delta) => {
+            const next = pdfCurrentPage + delta;
+            if (next >= 1 && next <= pdfTotalPages) await renderPDFPage(next);
+        };
+        // ─────────────────────────────────────────────────────────────
+
+        function listenLatestTest() {
+            const gradeClass = `${loggedInStudentGrade}_${loggedInStudentClass}`;
+            // URL에 testId가 있으면 해당 시험만 확인 (앱 링크 직접 진입)
+            const urlTestId = new URLSearchParams(window.location.search).get('testId') || '';
+            console.log("[listenLatestTest] gradeClass:", gradeClass, "urlTestId:", urlTestId);
+
+            const depQ = query(collection(db, "deployments"), where("gradeClass", "==", gradeClass));
+
+            onSnapshot(depQ, async (depSnap) => {
+                try {
+                    const activeDocs = depSnap.docs.filter(d => d.data().status === "active");
+
+                    if (!activeDocs.length) {
+                        document.getElementById('subject-title').innerText = "현재 이 반에 배포된 시험이 없습니다.";
+                        document.getElementById('testImage').style.display = 'none';
+                        document.getElementById('pdfCanvas').style.display = 'none';
+                        teacherAnswers = {};
+                        currentSubject = "";
+                        currentTestId = "";
+                        return;
+                    }
+
+                    let chosenDep = null;
+                    let chosenData = null;
+                    let blockedStatus = null;
+
+                    if (urlTestId) {
+                        // ── 특정 시험 지정 모드 (앱 링크) ──
+                        // 해당 testId의 시험만 확인. 차단이면 재응시 불가, 다른 시험으로 넘어가지 않음.
+                        const targetDoc = activeDocs.find(d => d.data().testId === urlTestId);
+                        if (!targetDoc) {
+                            document.getElementById('subject-title').innerText = "해당 시험이 현재 배포 중이 아닙니다.";
+                            return;
+                        }
+                        const dep = targetDoc.data();
+                        const sessionId = makeSessionId(dep.testId);
+                        const sessionSnap = await getDoc(doc(db, SESSION_COL, sessionId));
+                        if (sessionSnap.exists()) {
+                            const s = sessionSnap.data();
+                            if (s.status === 'active' || s.status === 'submitted') {
+                                showBlockedOverlay(s.status);
+                                return;
+                            }
+                        }
+                        const testDocSnap = await getDoc(doc(db, "tests", dep.testId));
+                        if (!testDocSnap.exists()) {
+                            document.getElementById('subject-title').innerText = "시험 데이터를 찾을 수 없습니다.";
+                            return;
+                        }
+                        chosenDep = dep;
+                        chosenData = testDocSnap.data();
+                    } else {
+                        // ── 자동 선택 모드 (직접 접속) ──
+                        // 차단되지 않은 첫 번째 시험을 순서대로 시도
+                        for (const activeDoc of activeDocs) {
+                            const dep = activeDoc.data();
+                            const sessionId = makeSessionId(dep.testId);
+                            const sessionSnap = await getDoc(doc(db, SESSION_COL, sessionId));
+                            if (sessionSnap.exists()) {
+                                const s = sessionSnap.data();
+                                if (s.status === 'active' || s.status === 'submitted') {
+                                    blockedStatus = s.status;
+                                    continue;
+                                }
+                            }
+                            const testDocSnap = await getDoc(doc(db, "tests", dep.testId));
+                            if (!testDocSnap.exists()) continue;
+                            chosenDep = dep;
+                            chosenData = testDocSnap.data();
+                            break;
+                        }
+                    }
+
+                    // 응시 가능한 시험이 없는 경우
+                    if (!chosenDep) {
+                        showBlockedOverlay(blockedStatus || 'active');
+                        return;
+                    }
+
+                    const subject = chosenData.subject;
+                    teacherAnswers = chosenData.answers || {};
+
+                    // 세션 생성 (testId 포함)
+                    if (currentTestId !== chosenDep.testId) {
+                        const sessionId = makeSessionId(chosenDep.testId);
+                        await setDoc(doc(db, SESSION_COL, sessionId), {
+                            name:      loggedInStudentName,
+                            grade:     loggedInStudentGrade,
+                            class:     loggedInStudentClass,
+                            number:    loggedInStudentNumber,
+                            testId:    chosenDep.testId,
+                            subject,
+                            status:    'active',
+                            startedAt: Date.now()
+                        });
+                        currentTestId = chosenDep.testId;
+                        examActive = true;
+                        activatedSubject = subject;
+                    }
+
+                    currentSubject = subject;
+                    document.getElementById('subject-title').innerText = currentSubject;
+
+                    if (chosenData.imageUrls?.length) {
+                        // 다중 이미지 (새 방식)
+                        document.getElementById('imgPageNav').style.display = 'none';
+                        loadImages(chosenData.imageUrls);
+                    } else if (chosenData.imageUrl) {
+                        // 단일 파일 (기존 호환)
+                        document.getElementById('imgPageNav').style.display = 'none';
+                        const isPDF = chosenData.fileType === 'pdf' ||
+                                      chosenData.imageUrl.split('?')[0].toLowerCase().endsWith('.pdf');
+                        if (isPDF) {
+                            document.getElementById('testImage').style.display = 'none';
+                            loadPDF(chosenData.imageUrl);
+                        } else {
+                            document.getElementById('pdfCanvas').style.display = 'none';
+                            document.getElementById('pdfStatus').style.display = 'none';
+                            document.getElementById('pdfPageNav').style.display = 'none';
+                            document.getElementById('testImage').src = chosenData.imageUrl;
+                            document.getElementById('testImage').style.display = 'block';
+                            showZoomHint();
+                        }
+                    }
+
+                    const totalQuestions = Object.keys(teacherAnswers).length || 5;
+                    renderOMR(totalQuestions);
+                    if (chosenData.timeLimit > 0) startTimer(chosenData.timeLimit);
+
+                } catch (err) {
+                    console.error("[listenLatestTest] 오류:", err);
+                    document.getElementById('subject-title').innerText = `오류: ${err.message}`;
+                }
+            }, (err) => {
+                console.error("[listenLatestTest] 쿼리 오류:", err);
+                document.getElementById('subject-title').innerText = `연결 오류: ${err.message}`;
+            });
+        }
+
+        function renderOMR(total) {
+            const omrContainer = document.getElementById('omr-container');
+            omrContainer.innerHTML = '';
+            totalPages = Math.ceil(total / QUESTIONS_PER_PAGE);
+            currentPage = 0;
+
+            for (let i = 1; i <= total; i++) {
+                let row = document.createElement('div');
+                row.className = 'omr-row';
+                let radioHtml = `<div class="q-num">${i}.</div><div class="radio-group">`;
+                for (let num = 1; num <= 5; num++) {
+                    radioHtml += `<input type="radio" id="q${i}_${num}" name="q${i}" value="${num}"><label for="q${i}_${num}">${num}</label>`;
+                }
+                radioHtml += `</div>`;
+                row.innerHTML = radioHtml;
+                omrContainer.appendChild(row);
+            }
+
+            // 모바일에서만 페이지네이션 적용
+            if (isMobile()) {
+                showPage(0);
+            }
+        }
+
+        // 모바일 전용: 페이지 표시 함수
+        function showPage(page) {
+            currentPage = page;
+            const allRows = document.querySelectorAll('.omr-row');
+            const total = allRows.length;
+
+            allRows.forEach((row, idx) => {
+                const visible = idx >= page * QUESTIONS_PER_PAGE && idx < (page + 1) * QUESTIONS_PER_PAGE;
+                row.style.display = visible ? 'flex' : 'none';
+            });
+
+            const startQ = page * QUESTIONS_PER_PAGE + 1;
+            const endQ = Math.min(startQ + QUESTIONS_PER_PAGE - 1, total);
+            document.getElementById('pageIndicator').innerText = `${startQ}~${endQ}번 / 전체 ${total}문항`;
+
+            document.getElementById('prevBtn').disabled = (page === 0);
+
+            const isLast = page >= totalPages - 1;
+            document.getElementById('nextBtn').style.display = isLast ? 'none' : '';
+            document.getElementById('submitNavBtn').style.display = isLast ? '' : 'none';
+        }
+
+        window.prevPage = () => { if (currentPage > 0) showPage(currentPage - 1); };
+        window.nextPage = () => { if (currentPage < totalPages - 1) showPage(currentPage + 1); };
+
+        // ── 시험지 핀치 줌 ──────────────────────────────────────────────────────
+        function showZoomHint() {
+            if (!isMobile()) return;
+            const hint = document.getElementById('zoomHint');
+            hint.style.opacity = '1';
+            setTimeout(() => { hint.style.opacity = '0'; }, 2400);
+        }
+
+        (function initPinchZoom() {
+            const section = document.querySelector('.test-paper-section');
+            const wrapper = document.getElementById('zoomWrapper');
+            const resetBtn = document.getElementById('zoomResetBtn');
+            if (!section || !wrapper) return;
+
+            let scale = 1, tx = 0, ty = 0;
+            let p0dist = 0, p0scale = 1, p0tx = 0, p0ty = 0;
+            let p0mid = { x: 0, y: 0 };
+            let panStart = { x: 0, y: 0 };
+            let lastTap = 0;
+            const MIN = 1, MAX = 4;
+
+            function getTouchDist(t) {
+                return Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+            }
+            function getTouchMid(t) {
+                const r = section.getBoundingClientRect();
+                return { x: (t[0].clientX + t[1].clientX) / 2 - r.left,
+                         y: (t[0].clientY + t[1].clientY) / 2 - r.top };
+            }
+            function clamp() {
+                const sw = section.clientWidth, sh = section.clientHeight;
+                const ww = wrapper.offsetWidth,  wh = wrapper.offsetHeight;
+                tx = Math.min(0, Math.max(sw - ww * scale, tx));
+                ty = Math.min(0, Math.max(sh - wh * scale, ty));
+            }
+            function apply() {
+                wrapper.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+                const zoomed = scale > 1.05;
+                section.style.overflow = zoomed ? 'hidden' : '';
+                if (resetBtn) resetBtn.style.display = zoomed ? '' : 'none';
+            }
+            function reset(animated) {
+                if (animated) wrapper.style.transition = 'transform 0.22s ease-out';
+                scale = 1; tx = 0; ty = 0;
+                apply();
+                if (animated) setTimeout(() => { wrapper.style.transition = ''; }, 230);
+            }
+
+            if (resetBtn) resetBtn.addEventListener('click', () => reset(true));
+
+            section.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    p0dist  = getTouchDist(e.touches);
+                    p0scale = scale; p0tx = tx; p0ty = ty;
+                    p0mid   = getTouchMid(e.touches);
+                    wrapper.style.transition = '';
+                } else if (e.touches.length === 1) {
+                    const now = Date.now();
+                    if (now - lastTap < 280) {
+                        e.preventDefault();
+                        reset(true);
+                        lastTap = 0;
+                        return;
+                    }
+                    lastTap = now;
+                    if (scale > 1.05) {
+                        panStart.x = e.touches[0].clientX - tx;
+                        panStart.y = e.touches[0].clientY - ty;
+                    }
+                }
+            }, { passive: false });
+
+            section.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const newScale = Math.min(MAX, Math.max(MIN, p0scale * getTouchDist(e.touches) / p0dist));
+                    const mid = getTouchMid(e.touches);
+                    // 핀치 중심점에 맞춰 이동 계산
+                    const cx = (p0mid.x - p0tx) / p0scale;
+                    const cy = (p0mid.y - p0ty) / p0scale;
+                    tx = mid.x - cx * newScale;
+                    ty = mid.y - cy * newScale;
+                    scale = newScale;
+                    clamp();
+                    apply();
+                } else if (e.touches.length === 1 && scale > 1.05) {
+                    e.preventDefault();
+                    tx = e.touches[0].clientX - panStart.x;
+                    ty = e.touches[0].clientY - panStart.y;
+                    clamp();
+                    apply();
+                }
+            }, { passive: false });
+
+            section.addEventListener('touchend', (e) => {
+                if (e.touches.length === 0 && scale < 1.15) reset(true);
+            });
+        })();
+
+        // =================================================================
+        // 🚨 부정행위 실시간 트리거 로직
+        // =================================================================
+        async function triggerCheatingSystem(reason) {
+            if (isProcessingCheating || !loggedInStudentName || cheatCooldown) return;
+
+            cheatCooldown = true;
+            cheatCount++;
+
+            if (cheatCount === 1) {
+                setTimeout(() => {
+                    alert(`[부정행위 경고 1회]\n\n허가되지 않은 행동(${reason})이 감지되었습니다.\n한 번만 더 이탈하거나 단축키(Alt, Ctrl)를 누르면 시험방에서 강제 퇴장당합니다.`);
+                    window.focus();
+                    setTimeout(() => { cheatCooldown = false; }, 1000);
+                }, 100);
+            }
+            else if (cheatCount >= 2) {
+                isProcessingCheating = true;
+                setTimeout(async () => {
+                    alert(`[시험 강제 퇴장]\n\n부정행위 2회 누적으로 인해 즉시 강제 퇴장 처리됩니다.\n이 기록은 교사용 대시보드에 실시간 보고됩니다.`);
+                    try {
+                        await addDoc(collection(db, "student_scores"), {
+                            name: loggedInStudentName,
+                            grade: loggedInStudentGrade,
+                            class: loggedInStudentClass,
+                            number: loggedInStudentNumber,
+                            score: "부정행위",
+                            subject: currentSubject || "단원평가",
+                            timestamp: Date.now(),
+                            keywords: ["#부정행위감지", "#강제퇴장조치"],
+                            seteuk: "시험 응시 도중 허가되지 않은 특수키(Alt/Ctrl) 사용 또는 브라우저 탭 전환이 2회 적발되어 시스템에 의해 강제 퇴장 및 실시간 부정행위 등록 처리됨.",
+                            answers: {}
+                        });
+                    } catch(e) {
+                        console.error("부정행위 전송 실패:", e);
+                    } finally {
+                        loggedInStudentName = ""; // 이후 부정행위 이벤트 차단용
+
+                        // 로그인 폼 대신 재응시 불가 오버레이 표시
+                        // (Firestore 세션이 'active'로 남아 있어 재입장 시 자동 차단됨)
+                        showBlockedOverlay('active');
+
+                        cheatCount = 0;
+                        isProcessingCheating = false;
+                        cheatCooldown = false;
+                    }
+                }, 100);
+            }
+        }
+
+        // Ctrl / Alt 단축키 감지 센서
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Alt' || e.key === 'Control' || e.altKey || e.ctrlKey) {
+                e.preventDefault();
+                triggerCheatingSystem("특수 단축키(Alt / Ctrl) 입력");
+            }
+        });
+
+        // 탭 전환 감지 센서
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                triggerCheatingSystem("시험 화면 이탈/탭 전환");
+            }
+        });
+
+        // 마우스 뷰포트 이탈 감지 센서
+        document.addEventListener('mouseleave', () => {
+            triggerCheatingSystem("시험 화면 밖으로 마우스 이탈");
+        });
+
+        function endExam(score) {
+            // 타이머 정지
+            clearInterval(timerInterval);
+            const timerEl = document.getElementById('timerDisplay');
+            if (timerEl) timerEl.style.display = 'none';
+
+            disableLeaveWarning(); // 제출 완료 후 이탈 경고 해제
+
+            // 세션 → submitted 업데이트 (testId 포함 — 시험별 독립 세션)
+            const sessionId = makeSessionId(currentTestId);
+            setDoc(doc(db, SESSION_COL, sessionId), { status: 'submitted', submittedAt: Date.now() }, { merge: true })
+                .catch(e => console.error('세션 업데이트 실패:', e));
+
+            // 부정행위 감지 비활성화 (제출 완료 후 탭 전환은 정상 행동)
+            loggedInStudentName = "";
+
+            // OMR 라디오 버튼 전체 비활성화
+            document.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+
+            // 제출/이전/다음 버튼 비활성화
+            document.querySelectorAll('.submit-btn, .nav-btn').forEach(b => {
+                b.disabled = true;
+                b.style.opacity = '0.4';
+            });
+
+            // 종료 오버레이 표시
+            document.getElementById('examEndScore').textContent = score + '점';
+            document.getElementById('examEndOverlay').style.display = 'flex';
+        }
+
+        window.submitTest = async () => {
+            const answers = {};
+            const qCount = document.querySelectorAll('.omr-row').length;
+            let allChecked = true;
+
+            for (let i = 1; i <= qCount; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (!selected) { allChecked = false; break; }
+                answers[i] = selected.value;
+            }
+
+            if (!allChecked) return alert("풀지 않은 문제가 있습니다!");
+
+            // 제출 중 버튼 비활성화 (중복 제출 방지)
+            const btn = isMobile()
+                ? document.getElementById('submitNavBtn')
+                : document.querySelector('.submit-btn');
+            btn.innerText = "채점 및 전송 중...";
+            btn.disabled = true;
+            btn.style.backgroundColor = "#8B95A1";
+
+            let correctCount = 0;
+            for (let i = 1; i <= qCount; i++) {
+                if (String(answers[i]) === String(teacherAnswers[i])) correctCount++;
+            }
+            const calculatedScore = Math.round((correctCount / qCount) * 100);
+
+            try {
+                await addDoc(collection(db, "student_scores"), {
+                    name: loggedInStudentName,
+                    grade: loggedInStudentGrade,
+                    class: loggedInStudentClass,
+                    number: loggedInStudentNumber,
+                    score: calculatedScore,
+                    subject: currentSubject,
+                    timestamp: Date.now(),
+                    keywords: ["#디지털OMR", calculatedScore >= 80 ? "#상위권성취" : "#집중개선요망"],
+                    seteuk: `${currentSubject} 평가에서 전체 ${qCount}문항 중 ${correctCount}문항을 맞춰 성취도 ${calculatedScore}점을 획득함.`,
+                    answers: answers
+                });
+
+                endExam(calculatedScore);
+            } catch(e) {
+                alert(`전송 오류: ${e.message}`);
+                btn.innerText = isMobile() ? "제출" : "답안 제출하기";
+                btn.disabled = false;
+                btn.style.backgroundColor = "";
+            }
+        }
+    </script>
+</body>
+</html>

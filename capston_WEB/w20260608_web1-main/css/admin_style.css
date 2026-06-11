@@ -1,0 +1,146 @@
+/* ═══════════════════════════════════════════════════════════════
+   관리자 센터 — 관리자 전용 요소
+   (dashboard_base / dashboard_topbar / dashboard_dark 위에 로드.
+    토큰·body·카드·상단바·다크모드는 대시보드 CSS 를 그대로 재사용)
+═══════════════════════════════════════════════════════════════ */
+
+/* ── 로고 보조 태그 ── */
+.nav-logo-tag {
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 6px;
+    color: var(--primary);
+    letter-spacing: 0.5px;
+}
+
+/* ── 단축바 뱃지 (승인 대기 수) ── */
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 6px;
+    background: #e53e3e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 9px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* ── 운영 현황 통계 카드 ── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+.stat-card {
+    background: var(--surface);
+    padding: 22px 24px;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+.stat-card h3 {
+    font-size: 14px;
+    margin: 0;
+    color: var(--text-4);
+    font-weight: 600;
+}
+.stat-card p {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 10px 0 0;
+    color: var(--text-1);
+}
+.stat-card p.text-danger { color: var(--danger); }
+.text-danger { color: var(--danger); font-weight: 700; }
+
+/* ── 카드 제목 ── */
+.card > h3:first-child {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-1);
+}
+
+/* ── 공지 입력 ── */
+textarea {
+    width: 100%;
+    min-height: 90px;
+    margin: 0 0 14px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-2);
+    background: var(--surface);
+    resize: vertical;
+    box-sizing: border-box;
+    outline: none;
+}
+textarea:focus { border-color: var(--primary); }
+
+/* ── 관리자 테이블 (대시보드 학생 테이블과 동일 톤) ── */
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.admin-table th {
+    background: var(--surface-2);
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 2px solid var(--border);
+    font-size: 13.5px;
+    color: var(--text-3);
+    font-weight: 600;
+}
+.admin-table td {
+    padding: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 14px;
+    color: var(--text-2);
+    vertical-align: middle;
+}
+
+/* ── 버튼 ── */
+.btn {
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: inherit;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: #2568d4; }
+
+/* 승인 버튼 — 녹색 */
+.btn-approve {
+    background: var(--success);
+    color: #fff;
+    margin-right: 6px;
+    box-shadow: 0 2px 4px rgba(46, 204, 113, 0.2);
+}
+.btn-approve:hover {
+    background: #27ae60;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+}
+
+/* 거절 버튼 — 적색 아웃라인 */
+.btn-reject {
+    background: transparent;
+    color: var(--danger);
+    border: 1.5px solid var(--danger);
+}
+.btn-reject:hover {
+    background: var(--danger);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.2);
+}

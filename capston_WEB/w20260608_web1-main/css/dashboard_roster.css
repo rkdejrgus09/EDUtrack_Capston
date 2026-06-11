@@ -1,0 +1,349 @@
+/* ═══════════════════════════════════════════════════════════════
+   학생 목록 화면 — 학생 테이블 · 학년/반 탭 · 사이드바 · 삭제 모드
+═══════════════════════════════════════════════════════════════ */
+
+
+/* ── 학생 목록 뷰 (테이블 · 뱃지 · 버튼) ── */
+/* ── 학생 목록 뷰 ── */
+.view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.view-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-1);
+}
+
+.btn-dark {
+    background: #4a5568;
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.student-list-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    color: var(--text-2);
+}
+
+.btn-filter {
+    background: #3182F6;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.class-select-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--text-3);
+}
+
+.class-select-row select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--text-2);
+    outline: none;
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+}
+
+.total-count { color: #718096; font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; }
+
+th {
+    background: var(--surface-2);
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 2px solid var(--border);
+    font-size: 13.5px;
+    color: var(--text-3);
+    font-weight: 600;
+}
+
+td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 14px;
+    color: var(--text-2);
+    vertical-align: middle;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-active { background: #c6f6d5; color: #276749; }
+.status-hold { background: #fefcbf; color: #975a16; }
+
+.subject-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-right: 4px;
+}
+
+.tag-complete { background: #ebf8ff; color: #2b6cb0; }
+.tag-pending { background: #fff5f5; color: #c53030; }
+.tag-study { background: #f0fff4; color: #276749; }
+
+.btn-student-info {
+    background: #3182F6;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-right: 4px;
+}
+
+.btn-assignment {
+    background: #38a169;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* ── 로스터 뷰 · 학년/반 탭 · 사이드바 ── */
+/* ── 학생 목록 뷰 ── */
+.roster-view {
+    padding: 0;
+}
+
+.roster-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+}
+
+.roster-grade-tab-bar {
+    display: flex;
+    gap: 0;
+    padding: 0 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.roster-gtab {
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-4);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.roster-gtab:hover { color: var(--primary); }
+.roster-gtab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.roster-class-tab-bar {
+    display: flex;
+    gap: 8px;
+    padding: 10px 28px;
+    background: var(--bg);
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 50px;
+}
+
+.roster-ctab {
+    padding: 5px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.roster-ctab:hover { background: #ebf8ff; color: var(--primary); border-color: #bee3f8; }
+.roster-ctab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.roster-body {
+    padding: 20px 28px 28px;
+}
+
+/* ── 사이드바 학교명 & 학년 버튼 ── */
+.sidebar-roster-section {
+    margin: 16px 10px 0;
+    padding: 14px 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-school-name {
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    text-align: center;
+    margin-bottom: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-grade-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sidebar-grade-btn {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.13);
+    color: var(--text-5);
+    padding: 9px 0;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    text-align: center;
+}
+.sidebar-grade-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+/* ── 삭제 모드 저장/취소 버튼 ── */
+/* ── 삭제 모드 저장/취소 버튼 ── */
+.btn-save-mode {
+    background: #3182F6;
+    color: white;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.btn-save-mode:hover { background: #2568d4; }
+
+.btn-cancel-mode {
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.btn-cancel-mode:hover { background: #cbd5e0; }
+
+/* ── 학생 상세 슬라이드 패널 ── */
+#rosterView.active {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.roster-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.student-detail-panel {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 70px;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    display: none;
+    flex-direction: column;
+}
+.student-detail-panel.open { display: flex; }
+
+.student-panel-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+}
+.student-panel-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    font-size: 22px;
+    color: var(--text-4);
+    cursor: pointer;
+    line-height: 1;
+    user-select: none;
+    transition: color 0.15s;
+}
+.student-panel-close:hover { color: var(--text-1); }
+
+.student-panel-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-1);
+    margin-bottom: 4px;
+    padding-right: 26px;
+}
+.student-panel-body {
+    padding: 16px 20px;
+    flex: 1;
+}
+.student-panel-record {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    margin: 0 -8px;
+    transition: background 0.12s;
+}
+.student-panel-record:last-child { border-bottom: none; }
+.student-panel-record[data-clickable] { cursor: pointer; }
+.student-panel-record[data-clickable]:hover { background: var(--surface-2); }
+.student-panel-record[data-clickable]:hover .record-subject { color: var(--primary); }
+
+/* 행 호버 커서 */
+#rosterStudentBody tr { cursor: pointer; transition: background 0.1s; }
+#rosterStudentBody tr:hover { background: var(--surface-2); }

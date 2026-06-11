@@ -1,0 +1,38 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/frontend/login.html" },
+    { "source": "/login", "destination": "/frontend/login.html" },
+    { "source": "/exam", "destination": "/frontend/student_test.html" },
+    { "source": "/student_test", "destination": "/frontend/student_test.html" },
+    { "source": "/dashboard", "destination": "/frontend/dashboard.html" },
+    { "source": "/admin", "destination": "/frontend/admin.html" },
+    { "source": "/detail", "destination": "/frontend/detail.html" },
+    { "source": "/e/:code", "destination": "/frontend/redirect.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/exam",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/student_test",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <title>EduTrack - 교사 대시보드</title>
+    <!-- 대시보드 스타일 (카테고리별 분리 · 로드 순서 = cascade 순서) -->
+    <link rel="stylesheet" href="../css/dashboard_base.css">    <!-- 통합 대시보드 (공통 베이스) -->
+    <link rel="stylesheet" href="../css/dashboard_topbar.css">  <!-- 상단바 구분 -->
+    <link rel="stylesheet" href="../css/dashboard_home.css">    <!-- 대시보드 화면 -->
+    <link rel="stylesheet" href="../css/dashboard_roster.css">  <!-- 학생 목록 화면 -->
+    <link rel="stylesheet" href="../css/dashboard_dock.css">    <!-- 우측 독 메뉴 -->
+    <link rel="stylesheet" href="../css/dashboard_dark.css">    <!-- 테마 오버라이드 (마지막) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="main-wrapper">
+    <header class="top-nav">
+        <div class="nav-left">
+            <div class="nav-logo" onclick="showView('homeView')">EduTrack</div>
+        </div>
+
+        <nav class="nav-links" id="navLinks">
+            <a id="nav-home"        class="nav-item active" onclick="showView('homeView')">대시보드 홈</a>
+            <a id="nav-roster"      class="nav-item"        onclick="showView('rosterView')">학급</a>
+            <a id="nav-report"      class="nav-item"        onclick="showView('reportView')">OMR 응시</a>
+            <a id="nav-wrongAnswer" class="nav-item"        onclick="showView('wrongAnswerView')">학습 분석</a>
+            <a id="nav-calendar"    class="nav-item"        onclick="showView('calendarView')">교사 일정</a>
+            <span class="nav-indicator" id="navIndicator"></span>
+        </nav>
+
+        <div class="nav-right">
+            <span class="nav-greeting"><span id="sidebarSchoolName">학교 정보 없음</span>의 교사님</span>
+            <button class="nav-settings-btn" onclick="openSettingsModal()" title="환경설정">⚙️</button>
+            <button class="nav-logout-btn" id="logoutBtn" title="로그아웃">↩</button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div id="viewTitle" class="view-title">대시보드 홈</div>
+            <div class="top-bar-actions" id="topBarActions"></div>
+        </div>
+
+        <div id="homeView" class="content-section active">
+            <div class="home-grid-top">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>공지사항</h3>
+                        <button class="see-all-btn" onclick="showView('noticeView')">전체보기 ›</button>
+                    </div>
+                    <div class="notice-list" id="noticeCardList">
+                        <div class="notice-item">
+                            <span class="notice-text">2026 1학기 중간고사 일정 안내</span>
+                            <span class="notice-date">2026-05-10</span>
+                        </div>
+                        <div class="notice-item">
+                            <span class="notice-text">학부모 상담 주간 운영 안내</span>
+                            <span class="notice-date">2026-05-08</span>
+                        </div>
+                        <div class="notice-item">
+                            <span class="notice-text">온라인 학습 시스템 점검 예정</span>
+                            <span class="notice-date">2026-05-05</span>
+                        </div>
+                        <div class="notice-item">
+                            <span class="notice-text"><span class="badge-n">N</span> 긴급 교무회의 일정 변경 안내</span>
+                            <span class="notice-date">2026-05-12</span>
+                        </div>
+                        <div class="notice-item">
+                            <span class="notice-text"><span class="badge-n">N</span> 2학기 교육과정 설명회 안내</span>
+                            <span class="notice-date">2026-05-11</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>최근 업데이트</h3>
+                        <button class="see-all-btn" onclick="showView('updateView')">전체보기 ›</button>
+                    </div>
+                    <div class="notice-list" id="updateCardList">
+                        <div class="notice-item">
+                            <span class="notice-text">수업 종료 (2-1) 보고 완료</span>
+                            <span class="notice-date">2026-03-17</span>
+                        </div>
+                        <div class="notice-item">
+                            <span class="notice-text">국어 문학 (3-14) 배포 완료</span>
+                            <span class="notice-date">2026-03-28</span>
+                        </div>
+                        <div class="notice-item">
+                            <span class="notice-text"><span class="badge-n">N</span> 2학년 2반 수학 진도 업데이트</span>
+                            <span class="notice-date">2026-05-12</span>
+                        </div>
+                        <div class="notice-item">
+                            <span class="notice-text"><span class="badge-n">N</span> 학생 평가 자료 업로드 완료</span>
+                            <span class="notice-date">2026-05-11</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-schedule-section">
+                <div class="section-title-row">
+                    <h3>교사 일정</h3>
+                </div>
+                <div class="schedule-cards">
+                    <div class="schedule-card">
+                        <div class="schedule-card-header">
+                            다음 수업 시간
+                        </div>
+                        <div class="next-class-body" id="nextClassBody">
+                            <div class="next-class-subject">수학</div>
+                            <div class="next-class-grade">2-1</div>
+                            <div class="next-class-meta">시간: 14:50-15:40</div>
+                            <div class="next-class-meta">장소: 2-1</div>
+                        </div>
+                    </div>
+
+                    <div class="schedule-card">
+                        <div class="schedule-card-header">
+                            다가오는 일정
+                        </div>
+                        <div class="upcoming-list" id="upcomingList">
+                            <div class="upcoming-item">
+                                <div class="upcoming-name">
+                                    <span class="dot dot-red"></span>교무회의
+                                </div>
+                                <div class="upcoming-detail">오늘 16:00</div>
+                                <div class="upcoming-detail">회의실</div>
+                            </div>
+                            <div class="upcoming-item">
+                                <div class="upcoming-name">
+                                    <span class="dot dot-blue"></span>학부모 상담
+                                </div>
+                                <div class="upcoming-detail">내일 17:00</div>
+                                <div class="upcoming-detail">상담실</div>
+                            </div>
+                            <div class="upcoming-item">
+                                <div class="upcoming-name">
+                                    <span class="dot dot-green"></span>학년 협의회
+                                </div>
+                                <div class="upcoming-detail">5월 14일 15:00</div>
+                                <div class="upcoming-detail">2학년 교무실</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="schedule-card">
+                        <div class="schedule-card-header">
+                            배포 중인 시험
+                        </div>
+                        <div id="activeDeployList">
+                            <div style="color:#a0aec0; font-size:13px; text-align:center; padding:16px 0;">불러오는 중...</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div id="reportView" class="content-section" style="padding: 30px;">
+            <div class="flex-between" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button id="backToExamListBtn" onclick="showExamList()" style="display:none; background:none; border:1px solid var(--border); border-radius:6px; padding:6px 12px; cursor:pointer; font-size:13px; color:var(--text-3);">← 시험 목록</button>
+                    <h3 style="margin: 0; font-weight: bold;" id="r-title">디지털 OMR 시험 목록</h3>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btnNewEval" class="view-btn" style="background:var(--success)" onclick="openEvalModal()">+ 새 평가 등록 (정답 세팅)</button>
+                    <button id="btnClassStats" class="view-btn" style="display:none; background:#8e44ad; font-size: 13px; padding: 8px 16px; border-radius: 6px;" onclick="openClassStatsModal()">학급 오답률 분석</button>
+                </div>
+            </div>
+
+            <!-- 1단계: 시험 목록 -->
+            <div id="examListPanel">
+                <div id="examListGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
+                    <div style="grid-column:1/-1; text-align:center; color:var(--text-5); padding:40px;">시험 목록을 불러오는 중...</div>
+                </div>
+            </div>
+
+            <!-- 2단계: 시험 선택 후 학생 목록 -->
+            <div id="studentListPanel" style="display:none;">
+                <div class="card" style="padding: 24px;">
+                    <!-- 헤더 -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                        <div>
+                            <span style="font-weight: bold; font-size: 16px;" id="selectedExamTitle">-</span>
+                            <span style="margin-left: 10px; font-size: 13px; color: var(--text-4);" id="selectedExamMeta"></span>
+                        </div>
+                        <button class="view-btn" onclick="refreshStudentList()" style="background:#3182F6; font-size:12px;">새로고침</button>
+                    </div>
+
+                    <!-- 반 선택 드롭다운 -->
+                    <div id="classDropdownWrap" style="position:relative; display:inline-block; margin-bottom:18px;">
+                        <button id="classDropdownBtn" onclick="toggleClassDropdown()"
+                            style="display:flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid var(--border); border-radius:8px; background:var(--surface); font-size:14px; font-weight:600; color:var(--text-2); cursor:pointer; min-width:160px; justify-content:space-between;">
+                            <span id="classDropdownLabel">전체 반</span>
+                            <span id="classDropdownArrow" style="font-size:11px; transition:transform 0.2s;">▼</span>
+                        </button>
+                        <div id="classDropdownMenu" style="display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:180px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:200; overflow:hidden;">
+                            <div id="classDropdownList"></div>
+                        </div>
+                    </div>
+
+                    <!-- 학생 테이블 -->
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>이름</th>
+                                <th>성취도 점수</th>
+                                <th>AI 분석 키워드</th>
+                                <th>데이터 관리 액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentListBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="rosterView" class="content-section roster-view">
+            <div class="roster-main">
+                <div class="roster-sticky-header">
+                    <div class="roster-grade-tab-bar" id="rosterGradeTabs">
+                        <button class="roster-gtab" onclick="selectRosterGrade(1)">1학년</button>
+                        <button class="roster-gtab" onclick="selectRosterGrade(2)">2학년</button>
+                        <button class="roster-gtab" onclick="selectRosterGrade(3)">3학년</button>
+                    </div>
+                    <div class="roster-class-tab-bar" id="rosterClassTabs">
+                        <span style="color:#a0aec0; font-size:13px;">학년을 선택해주세요.</span>
+                    </div>
+                </div>
+                <div class="roster-body">
+                    <div class="card" style="padding: 24px;">
+                        <div id="rosterListTitle" style="font-size:15px; font-weight:700; color:#1a202c; margin-bottom:16px;"></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;">번호</th>
+                                    <th>이름</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rosterStudentBody">
+                                <tr><td colspan="2" style="text-align:center; color:#a0aec0; padding:40px;">학년을 선택해주세요.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="studentDetailPanel" class="student-detail-panel">
+                <div class="student-panel-header">
+                    <span class="student-panel-close" onclick="window.closeStudentPanel()">&times;</span>
+                    <div class="student-panel-name" id="panelStudentName"></div>
+                    <div id="panelStudentMeta" style="font-size:13px; color:var(--text-4);"></div>
+                </div>
+                <div class="student-panel-body" id="panelStudentBody"></div>
+            </div>
+        </div>
+
+        <div id="wrongAnswerView" class="content-section">
+            <div class="view-header" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;">
+                <div>
+                    <h2>학습 분석</h2>
+                    <p style="margin:4px 0 0; color:#718096; font-size:13px;">시험을 선택하면 해당 시험의 학년 전체 학습 현황을 분석합니다.</p>
+                </div>
+                <button class="view-btn" onclick="window.onAnalysisExamChange(document.getElementById('analysisExamSelect')?.value||'')" style="background:#3182F6;">새로고침</button>
+            </div>
+            <div style="margin-top:20px; display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px;">
+                <span style="font-size:14px; font-weight:600; color:var(--text-2); white-space:nowrap;">시험 선택</span>
+                <select id="analysisExamSelect" onchange="window.onAnalysisExamChange(this.value)" style="flex:1; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:var(--surface); color:var(--text-1); cursor:pointer;">
+                    <option value="">-- 분석할 시험을 선택하세요 --</option>
+                </select>
+                <button id="toStudentListBtn" onclick="window.goToStudentList()" style="display:none; padding:8px 14px; background:var(--primary); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">응시자 목록 →</button>
+            </div>
+            <div id="analysisPlaceholder" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px;">
+                <div style="font-size:15px; font-weight:600; color:#718096; margin-bottom:8px;">분석할 시험을 선택해주세요</div>
+                <div style="font-size:13px; color:#a0aec0; text-align:center;">위 드롭다운에서 시험을 선택하거나,<br>OMR 응시 탭의 시험 카드에서 학습 분석을 클릭하세요.</div>
+            </div>
+            <div id="analysisContent" style="display:none;">
+                <div class="dashboard-grid" style="display:grid; grid-template-columns: 1.1fr .9fr; gap:16px; margin-top:20px;">
+                    <div class="card">
+                        <h4>학급 현황 요약</h4>
+                        <div id="noteSummaryGrid" style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-top:16px;"></div>
+                        <div style="margin-top:20px;">
+                            <div style="font-size:14px; font-weight:600; color:var(--text-1); margin-bottom:12px;">반별 평균 비교</div>
+                            <canvas id="classAvgCanvas"></canvas>
+                            <div id="classAvgEmpty" style="display:none; padding:18px; background:#f8fafc; border-radius:12px; color:#64748b; font-size:13px; text-align:center;">반별 데이터가 없습니다.</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>점수 분포 분석</h4>
+                        <div id="wrongSummary" style="margin-top:16px; display:grid; gap:12px;"></div>
+                        <div style="margin-top:20px;">
+                            <div style="font-size:14px; font-weight:600; color:var(--text-1); margin-bottom:12px;">점수 분포</div>
+                            <canvas id="scoreDistCanvas"></canvas>
+                            <div id="scoreDistEmpty" style="display:none; padding:18px; background:#f8fafc; border-radius:12px; color:#64748b; font-size:13px; text-align:center;">응시 데이터가 없습니다.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="noticeView" class="content-section notice-update-view">
+            <div class="nu-page-wrap">
+                <div class="card nu-card">
+                    <div class="nu-page-header">
+                        <span class="nu-back-btn" onclick="showView('homeView')">← 대시보드 홈</span>
+                        <div class="nu-title-row">
+                            <h2>공지사항</h2>
+                        </div>
+                    </div>
+                    <div id="noticePageList"></div>
+                </div>
+            </div>
+            <!-- 항목 클릭 시 우측 1/4 화면에 상세 표시 -->
+            <div class="nu-detail-panel" id="noticeDetailPanel">
+                <span class="nu-detail-close" onclick="closeNuDetail('notice')">&times;</span>
+                <div class="nu-detail-date" id="noticeDetailDate"></div>
+                <h3 class="nu-detail-title" id="noticeDetailTitle"></h3>
+                <div class="nu-detail-content" id="noticeDetailContent"></div>
+            </div>
+        </div>
+
+        <div id="updateView" class="content-section notice-update-view">
+            <div class="nu-page-wrap">
+                <div class="card nu-card">
+                    <div class="nu-page-header">
+                        <span class="nu-back-btn" onclick="showView('homeView')">← 대시보드 홈</span>
+                        <div class="nu-title-row">
+                            <h2>최근 업데이트</h2>
+                        </div>
+                    </div>
+                    <div id="updatePageList"></div>
+                </div>
+            </div>
+            <!-- 항목 클릭 시 우측 1/4 화면에 상세 표시 -->
+            <div class="nu-detail-panel" id="updateDetailPanel">
+                <span class="nu-detail-close" onclick="closeNuDetail('update')">&times;</span>
+                <div class="nu-detail-date" id="updateDetailDate"></div>
+                <h3 class="nu-detail-title" id="updateDetailTitle"></h3>
+                <div class="nu-detail-content" id="updateDetailContent"></div>
+            </div>
+        </div>
+
+        <div id="calendarView" class="content-section">
+            <div class="calendar-two-col">
+                <div class="calendar-left">
+                    <div class="section-header-row">
+                        <div class="section-title-row">
+                            <h3>주간 시간표</h3>
+                        </div>
+                        <div id="ttActionArea" style="display:flex; align-items:center; gap:8px;">
+                            <button class="btn-add-blue" onclick="openAddTimeModal()">+ 시간 추가</button>
+                            <div class="gear-menu-wrap" id="ttGearWrap">
+                                <button class="btn-size-gear" id="ttGearBtn" onclick="toggleGearMenu('tt')" title="옵션">⚙️</button>
+                                <ul class="gear-dropdown" id="ttGearMenu">
+                                    <li onclick="gearAction('tt','resize')"><span class="gear-icon">⤢</span>크기조절</li>
+                                    <li class="danger" onclick="gearAction('tt','delete')"><span class="gear-icon">🗑️</span>삭제하기</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="resize-wrap" id="ttWrap">
+                    <div class="card timetable-card">
+                        <table class="timetable">
+                            <thead>
+                                <tr>
+                                    <th>교사</th>
+                                    <th>시간</th>
+                                    <th>월</th>
+                                    <th>화</th>
+                                    <th>수</th>
+                                    <th>목</th>
+                                    <th>금</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="period-num">1</td>
+                                    <td class="period-time">09:00-09:50</td>
+                                    <td><div class="class-cell">수학<br><small>2-1</small></div></td>
+                                    <td><div class="class-cell">수학<br><small>2-1</small></div></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><div class="class-cell">수학<br><small>2-3</small></div></td>
+                                </tr>
+                                <tr>
+                                    <td class="period-num">2</td>
+                                    <td class="period-time">10:00-10:50</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><div class="class-cell">수학<br><small>2-2</small></div></td>
+                                    <td><div class="class-cell">수학<br><small>2-2</small></div></td>
+                                    <td><div class="class-cell">수학<br><small>2-1</small></div></td>
+                                </tr>
+                                <tr>
+                                    <td class="period-num">3</td>
+                                    <td class="period-time">11:00-11:50</td>
+                                    <td></td>
+                                    <td><div class="class-cell">수학<br><small>2-3</small></div></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><div class="class-cell">수학<br><small>2-2</small></div></td>
+                                </tr>
+                                <tr>
+                                    <td class="period-num">4</td>
+                                    <td class="period-time">12:00-12:50</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><div class="class-cell">수학<br><small>2-1</small></div></td>
+                                    <td></td>
+                                    <td><div class="class-cell">수학<br><small>2-1</small></div></td>
+                                </tr>
+                                <tr class="lunch-row">
+                                    <td class="period-num">점심</td>
+                                    <td class="period-time">12:50-13:50</td>
+                                    <td colspan="5" class="lunch-cell">점심시간</td>
+                                </tr>
+                                <tr>
+                                    <td class="period-num">5</td>
+                                    <td class="period-time">13:50-14:40</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class="period-num">6</td>
+                                    <td class="period-time">14:50-15:40</td>
+                                    <td><div class="class-cell">수학<br><small>2-1</small></div></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class="period-num">7</td>
+                                    <td class="period-time">15:50-16:40</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="resize-handle-bottom" id="ttBottomHandle"></div>
+                    <div class="resize-handle-right" id="ttRightHandle"></div>
+                    </div>
+                </div>
+
+                <div class="resize-handle-divider" id="calDivider"></div>
+
+                <div class="calendar-right">
+                    <div class="section-header-row">
+                        <div class="section-title-row">
+                            <h3>고정 일정</h3>
+                        </div>
+                        <div id="fsActionArea" style="display:flex; align-items:center; gap:8px;">
+                            <button class="btn-add-purple" onclick="openAddFixedModal()">+ 추가</button>
+                            <div class="gear-menu-wrap" id="fsGearWrap">
+                                <button class="btn-size-gear" id="fsGearBtn" onclick="toggleGearMenu('fs')" title="옵션">⚙️</button>
+                                <ul class="gear-dropdown" id="fsGearMenu">
+                                    <li onclick="gearAction('fs','resize')"><span class="gear-icon">⤢</span>크기조절</li>
+                                    <li class="danger" onclick="gearAction('fs','delete')"><span class="gear-icon">🗑️</span>삭제하기</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="resize-wrap" id="fsWrap">
+                    <div class="card fixed-schedule-card">
+                        <div class="fixed-item">
+                            <div class="fixed-title">교무회의</div>
+                            <div class="fixed-detail">매주 수요일 16:00</div>
+                            <div class="fixed-location">회의실</div>
+                        </div>
+                        <div class="fixed-item">
+                            <div class="fixed-title">학년 협의회</div>
+                            <div class="fixed-detail">매주 금요일 15:00</div>
+                            <div class="fixed-location">2학년 교무실</div>
+                        </div>
+                        <div class="fixed-item">
+                            <div class="fixed-title">학부모 상담</div>
+                            <div class="fixed-detail">매주 목요일 17:00-18:00</div>
+                            <div class="fixed-location">상담실</div>
+                        </div>
+                        <div class="fixed-item last">
+                            <div class="fixed-title">방과후 수업</div>
+                            <div class="fixed-detail">화, 목 19:00-20:00</div>
+                            <div class="fixed-location">301호</div>
+                        </div>
+                    </div>
+                    <div class="resize-handle-right" id="fsRightHandle"></div>
+                    <div class="resize-handle-bottom" id="fsBottomHandle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="evalModal" class="modal">
+        <div class="modal-content" style="width: 700px; max-height: 85vh; overflow-y: auto;">
+            <span class="close-btn" onclick="closeEvalModal()">&times;</span>
+            <h3>새 평가 배포 (시험지 업로드)</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">타이핑 없이 시험지 이미지를 올리고, 문제 텍스트를 복사하여 <strong>AI 자동 분석</strong>을 실행하세요.</p>
+            
+            <label>대상 학년</label>
+            <div style="margin-bottom:15px;">
+                <select id="targetGrade" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:14px; outline:none;">
+                    <option value="">학년 선택</option>
+                    <option value="1">1학년</option>
+                    <option value="2">2학년</option>
+                    <option value="3">3학년</option>
+                </select>
+            </div>
+            <p style="font-size:12px;color:#888;margin:-8px 0 14px;">* 반 배포는 시험 저장 후 시험 목록의 <strong>배포 관리</strong> 버튼에서 반별로 시작/종료할 수 있습니다.</p>
+            
+            <label>⏱ 제한 시간</label>
+            <select id="timeLimitSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:14px; margin-bottom:15px; outline:none; box-sizing:border-box;">
+                <option value="0">제한 없음</option>
+                <option value="10">10분</option>
+                <option value="20">20분</option>
+                <option value="30">30분</option>
+                <option value="40">40분</option>
+                <option value="50">50분</option>
+                <option value="60">60분</option>
+            </select>
+            
+            <label>평가 과목명</label>
+            <input type="text" id="newSubject" placeholder="예: 2026 일반 상식 형성평가" style="margin-bottom: 15px; width: 95%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">📄 시험지 업로드 (필수)</label>
+            <p style="font-size: 11px; color: #888; margin:4px 0 8px 0;">이미지(JPG·PNG)는 여러 장 선택 가능 · PDF는 1개 · 최대 10장</p>
+            <div id="drop-zone" class="drop-zone">
+                📁 파일을 드래그하거나 클릭하여 선택하세요.
+                <input type="file" id="file-input" hidden accept="image/*,.pdf" multiple />
+            </div>
+            <div id="image-preview-list" style="display:none; margin-bottom:4px;"></div>
+            <div id="change-file-area" style="display:none; text-align:center; margin-bottom:12px;">
+                <button id="change-file-btn" type="button" style="background:none; border:1px solid #ccc; border-radius:6px; padding:6px 14px; font-size:13px; color:#4E5968; cursor:pointer;">➕ 이미지 추가</button>
+            </div>
+
+            <label style="color:#e74c3c; font-weight:bold;">🤖 AI 키워드 추출 (선택)</label>
+            <p style="font-size: 11px; color: #888; margin:4px 0 8px 0;">시험 문제 텍스트를 붙여넣으면 AI가 취약점 분석 레이더 차트용 핵심 키워드 5개를 자동 추출합니다. 입력하지 않으면 기본 카테고리로 분석됩니다.</p>
+            <textarea id="aiKeywordText" placeholder="시험 문제의 전체 텍스트를 여기에 통째로 붙여넣으세요." style="width: 95%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-family: inherit; resize: none;"></textarea>
+            
+            <label style="display:block; margin-bottom:8px;">📝 문항별 정답 설정 (OMR)</label>
+            <div style="background:#f8f9fa; border:1px solid #e0e0e0; border-radius:8px; padding:14px 16px; margin-bottom:10px;">
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">문제 수를 선택하거나 직접 입력하세요</div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;" id="qChipRow">
+                    <button type="button" onclick="window.setQCount(5)"  data-q="5"
+                        style="padding:6px 16px; border-radius:20px; border:1px solid #3182F6; background:#3182F6; color:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;">5문제</button>
+                    <button type="button" onclick="window.setQCount(10)" data-q="10"
+                        style="padding:6px 16px; border-radius:20px; border:1px solid #ccc; background:#fff; color:#4a5568; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;">10문제</button>
+                    <button type="button" onclick="window.setQCount(20)" data-q="20"
+                        style="padding:6px 16px; border-radius:20px; border:1px solid #ccc; background:#fff; color:#4a5568; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;">20문제</button>
+                    <button type="button" onclick="window.setQCount(30)" data-q="30"
+                        style="padding:6px 16px; border-radius:20px; border:1px solid #ccc; background:#fff; color:#4a5568; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;">30문제</button>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:13px; color:#666; white-space:nowrap;">직접 입력</span>
+                    <input type="number" id="qCountSelect" value="5" min="1" max="100"
+                        onchange="window.setQCount(+this.value)"
+                        style="width:68px; padding:7px 8px; border-radius:6px; border:1px solid #ccc; outline:none; font-size:15px; font-weight:bold; text-align:center; color:#333; background:#fff;">
+                    <span style="font-size:13px; color:#666;">문제</span>
+                </div>
+            </div>
+            <div id="omr-container" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+            <button class="view-btn btn-submit" id="saveBtn" style="width: 100%; font-size: 15px; padding: 12px; font-weight: bold; background: #3182F6;">🚀 AI 분석 및 정답 저장</button>
+        </div>
+    </div>
+
+    <!-- 시험 수정 모달 -->
+    <div id="editExamModal" class="modal">
+        <div class="modal-content" style="width:600px; max-height:85vh; overflow-y:auto;">
+            <span class="close-btn" onclick="closeModal('editExamModal')">&times;</span>
+            <h3 style="margin-top:0;">시험 수정</h3>
+
+            <label>대상 학년</label>
+            <select id="edit-targetGrade" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:14px; margin-bottom:15px; outline:none;">
+                <option value="1">1학년</option>
+                <option value="2">2학년</option>
+                <option value="3">3학년</option>
+            </select>
+
+            <label>⏱ 제한 시간</label>
+            <select id="edit-timeLimitSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:14px; margin-bottom:15px; outline:none; box-sizing:border-box;">
+                <option value="0">제한 없음</option>
+                <option value="10">10분</option>
+                <option value="20">20분</option>
+                <option value="30">30분</option>
+                <option value="40">40분</option>
+                <option value="50">50분</option>
+                <option value="60">60분</option>
+            </select>
+
+            <label>평가 과목명</label>
+            <input type="text" id="edit-subject" placeholder="예: 2026 수학 1단원 형성평가" style="margin-bottom:15px; width:95%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:14px; outline:none;">
+
+            <label style="display:block; margin-bottom:8px;">📝 문항별 정답 수정</label>
+            <div id="edit-omr-container" style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:20px;"></div>
+
+            <button id="editExamSaveBtn" onclick="window.saveEditExam()" style="width:100%; font-size:15px; padding:12px; font-weight:bold; background:#3182F6; color:#fff; border:none; border-radius:8px; cursor:pointer;">저장하기</button>
+        </div>
+    </div>
+
+    <!-- 반별 배포 관리 모달 -->
+    <div id="deploymentModal" class="modal">
+        <div class="modal-content" style="width: 520px; text-align: left;">
+            <span class="close-btn" onclick="closeModal('deploymentModal')">&times;</span>
+            <h3 style="margin-top:0; color:var(--text-1);">반별 배포 관리</h3>
+            <p id="deploymentModalTitle" style="font-size:14px; font-weight:600; color:var(--primary); margin-bottom:4px;"></p>
+            <p id="deploymentModalGrade" style="font-size:13px; color:var(--text-4); margin-bottom:16px;"></p>
+            <div id="deploymentClassRows" style="border:1px solid var(--border); border-radius:8px; overflow:hidden;"></div>
+            <p style="font-size:11px;color:var(--text-5);margin-top:12px;">배포 시작 시 해당 반 학생 기기에 즉시 시험이 활성화됩니다.</p>
+        </div>
+    </div>
+
+    <div id="classStatsModal" class="modal">
+        <div class="modal-content" style="width: 620px; text-align: left;">
+            <span class="close-btn" onclick="closeModal('classStatsModal')">&times;</span>
+            <h3 style="color: #333; margin-top: 0;">문항별 오답률 분석 (Item Response)</h3>
+
+            <!-- 분석 범위 토글 -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+                <span style="font-size:13px; color:#666; font-weight:600;">분석 범위:</span>
+                <div style="display:flex; border:1px solid #ddd; border-radius:8px; overflow:hidden;">
+                    <button id="scopeBtnClass" onclick="window.setStatsScope('class')"
+                        style="padding:6px 16px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#3182F6; color:#fff;">현재 반</button>
+                    <button id="scopeBtnGrade" onclick="window.setStatsScope('grade')"
+                        style="padding:6px 16px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#f4f7f9; color:#4a5568;">학년 전체</button>
+                </div>
+                <span id="statsScopeLabel" style="font-size:12px; color:#888;"></span>
+            </div>
+
+            <!-- 문항 선택 + 설명 -->
+            <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                <p style="font-size: 13px; color: #666; margin: 0;">가장 많이 헷갈려 한 매력적 오답을 분석합니다.</p>
+                <div>
+                    <span style="font-size: 14px; font-weight: bold; margin-right: 8px;">🔍 분석할 문항:</span>
+                    <select id="statQuestionSelect" onchange="window.changeQuestionStats(this.value)" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; outline: none; cursor: pointer;"></select>
+                </div>
+            </div>
+            <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                <canvas id="classBarChart" height="200"></canvas>
+            </div>
+            <div id="aiInsightText" style="margin-top: 15px; padding: 12px 15px; background: #fffbea; border-left: 4px solid #f39c12; border-radius: 6px; font-size: 13px; color: #7d5a00; line-height: 1.6;"></div>
+        </div>
+    </div>
+
+    <div id="studentInfoModal" class="modal">
+        <div class="modal-content" style="width: 600px; text-align: left;">
+            <span class="close-btn" onclick="closeModal('studentInfoModal')">&times;</span>
+            <h3 style="color: var(--primary); margin-top: 0;"><span id="infoStudentName">-</span> 학생 취약점 추적 리포트</h3>
+            <p style="font-size: 12px; color: #888;">AI 통문장 추출 키워드와 학생의 실제 오답 비율을 자동 매칭한 리얼 분석 데이터입니다.</p>
+            <div style="display: flex; align-items: center; gap: 20px; margin-top: 15px;">
+                <div style="flex: 1.2;">
+                    <canvas id="studentRadarChart" height="250"></canvas>
+                </div>
+                <div id="studentDynamicText" style="flex: 0.8; line-height: 1.8; font-size: 13px; color: #333;">
+                    데이터 로딩 및 실제 분석 중...
+                </div>
+            </div>
+
+            <div id="generatedSeteukArea" style="display:none; margin-top:15px; padding:15px; background:#f0fdf4; border-left:4px solid #38a169; border-radius:8px; font-size:13px; line-height:1.6; color:#276749;"></div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="view-btn btn-submit" style="flex: 1; background: #f39c12;" onclick="generateAutoSeteukFromAnalysis()">📝 AI 세특 초안 작성</button>
+                <button class="view-btn btn-submit" style="flex: 1; background: #1a73e8;" onclick="closeModal('studentInfoModal')">확인 완료</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="aiClinicModal" class="modal">
+        <div class="modal-content" style="width:520px; text-align:left;">
+            <span class="close-btn" onclick="closeModal('aiClinicModal')">&times;</span>
+            <h3 style="margin-top:0;">🤖 AI 쌍둥이 오답 클리닉</h3>
+            <div id="clinicMessage" style="font-size:14px; color:#333; margin-bottom:12px;"></div>
+            <div id="clinicQuestions" style="background:#fff; padding:10px; border-radius:8px; border:1px solid #eee; margin-bottom:14px;"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="view-btn" style="background:#e2e8f0; color:#333;" onclick="closeModal('aiClinicModal')">취소</button>
+                <button class="view-btn btn-submit" id="clinicSendBtn" style="background:#3182F6; color:white;" onclick="confirmSendClinic()">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content settings-modal">
+            <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
+            <h3 style="margin-top:0; font-size:17px; color:#1a202c;">환경설정</h3>
+
+            <div class="settings-tabs">
+                <button class="stab active" onclick="switchSettingsTab('account', this)">계정정보</button>
+                <button class="stab" onclick="switchSettingsTab('teacher', this)">교사정보</button>
+                <button class="stab" onclick="switchSettingsTab('theme', this)">테마 설정</button>
+                <button class="stab" onclick="switchSettingsTab('classcode', this)">학급 코드</button>
+            </div>
+
+            <div id="stab-account" class="stab-content active">
+                <div class="sfield">
+                    <div class="sfield-label">아이디</div>
+                    <div class="sfield-value" id="s-uid">-</div>
+                </div>
+                <div class="sfield">
+                    <div class="sfield-label">이메일</div>
+                    <div class="sfield-value" id="s-email">-</div>
+                </div>
+                <div class="sfield">
+                    <div class="sfield-label">비밀번호</div>
+                    <button class="s-action-btn" onclick="sendPasswordReset()">재설정 이메일 발송</button>
+                </div>
+            </div>
+
+            <div id="stab-teacher" class="stab-content">
+                <div class="sfield">
+                    <div class="sfield-label">학교명</div>
+                    <div class="s-school-wrap">
+                        <input type="text" id="t-school" class="s-input" placeholder="예: ○○">
+                        <span class="s-school-suffix">고등학교</span>
+                    </div>
+                </div>
+                <div class="sfield">
+                    <div class="sfield-label">이름</div>
+                    <input type="text" id="t-name" class="s-input" placeholder="실명 입력">
+                </div>
+                <div class="sfield">
+                    <div class="sfield-label">직책</div>
+                    <select id="t-position" class="s-input s-select">
+                        <option value="">-- 직책 선택 --</option>
+                        <option value="담임교사">담임교사</option>
+                        <option value="학년부장">학년부장</option>
+                        <option value="학생부장">학생부장</option>
+                        <option value="교무부장">교무부장</option>
+                        <option value="상담교사 (진로교사)">상담교사 (진로교사)</option>
+                        <option value="보건교사">보건교사</option>
+                        <option value="사감">사감</option>
+                        <option value="교감">교감</option>
+                        <option value="교장">교장</option>
+                    </select>
+                </div>
+                <button class="s-save-btn" onclick="saveTeacherInfo()">저장하기</button>
+            </div>
+
+            <div id="stab-theme" class="stab-content">
+                <p style="font-size:13px; color:#718096; margin-bottom:18px;">사용할 테마 색상을 선택하세요.</p>
+                <div class="theme-swatches" id="themeSwatches">
+                    <div class="theme-swatch" data-idx="0" style="background:#5A78B8" onclick="applyTheme(0)" title="블루"></div>
+                    <div class="theme-swatch" data-idx="1" style="background:#649552" onclick="applyTheme(1)" title="그린"></div>
+                    <div class="theme-swatch" data-idx="2" style="background:#E87C52" onclick="applyTheme(2)" title="오렌지"></div>
+                    <div class="theme-swatch" data-idx="3" style="background:#F4B842" onclick="applyTheme(3)" title="옐로우"></div>
+                    <div class="theme-swatch" data-idx="4" style="background:#927AB8" onclick="applyTheme(4)" title="퍼플"></div>
+                    <div class="theme-swatch" data-idx="5" style="background:#5AB8B8" onclick="applyTheme(5)" title="시안"></div>
+                </div>
+                <button onclick="resetTheme()" style="margin-top:16px; background:none; border:1px solid #e2e8f0; padding:7px 14px; border-radius:6px; font-size:12px; color:#718096; cursor:pointer;">기본값으로 초기화</button>
+            </div>
+
+            <div id="stab-classcode" class="stab-content">
+                <p style="font-size:13px; color:#718096; margin:0 0 14px;">학생 앱 회원가입 시 입력할 학급 코드를 발급합니다.</p>
+                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+                    <select id="cc-grade" style="padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; outline:none; background:#fff; color:#2d3748;">
+                        <option value="">학년 선택</option>
+                        <option value="1">1학년</option>
+                        <option value="2">2학년</option>
+                        <option value="3">3학년</option>
+                    </select>
+                    <select id="cc-class" style="padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; outline:none; background:#fff; color:#2d3748;">
+                        <option value="">반 선택</option>
+                        <option value="1">1반</option><option value="2">2반</option>
+                        <option value="3">3반</option><option value="4">4반</option>
+                        <option value="5">5반</option><option value="6">6반</option>
+                        <option value="7">7반</option><option value="8">8반</option>
+                        <option value="9">9반</option><option value="10">10반</option>
+                    </select>
+                    <button onclick="window.issueClassCode()" style="padding:8px 16px; background:var(--primary); color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">+ 코드 발급</button>
+                </div>
+                <div id="cc-list" style="max-height:300px; overflow-y:auto;">
+                    <div style="text-align:center; color:#a0aec0; font-size:13px; padding:24px;">코드를 불러오는 중...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addTimeModal" class="modal">
+        <div class="modal-content" style="width: 400px;">
+            <span class="close-btn" onclick="closeModal('addTimeModal')">&times;</span>
+            <h3 style="margin-top:0;">수업 시간 추가</h3>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">교시</label>
+            <select id="addTimePeriod" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none;">
+                <option value="0">1교시 (09:00-09:50)</option>
+                <option value="1">2교시 (10:00-10:50)</option>
+                <option value="2">3교시 (11:00-11:50)</option>
+                <option value="3">4교시 (12:00-12:50)</option>
+                <option value="4">5교시 (13:50-14:40)</option>
+                <option value="5">6교시 (14:50-15:40)</option>
+                <option value="6">7교시 (15:50-16:40)</option>
+            </select>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">요일</label>
+            <select id="addTimeDay" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none;">
+                <option value="2">월요일</option>
+                <option value="3">화요일</option>
+                <option value="4">수요일</option>
+                <option value="5">목요일</option>
+                <option value="6">금요일</option>
+            </select>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">과목명</label>
+            <input type="text" id="addTimeSubject" placeholder="예: 수학" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none; box-sizing:border-box;">
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">학급</label>
+            <input type="text" id="addTimeClass" placeholder="예: 2-1" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 20px; outline:none; box-sizing:border-box;">
+            <button onclick="submitAddTime()" style="width:100%; padding:11px; background:#3182F6; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">추가하기</button>
+        </div>
+    </div>
+
+    <div id="addFixedModal" class="modal">
+        <div class="modal-content" style="width: 400px;">
+            <span class="close-btn" onclick="closeModal('addFixedModal')">&times;</span>
+            <h3 style="margin-top:0;">고정 일정 추가</h3>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">일정명</label>
+            <input type="text" id="addFixedTitle" placeholder="예: 교무회의" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none; box-sizing:border-box;">
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">반복 요일</label>
+            <select id="addFixedDay" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none;">
+                <option>매주 월요일</option>
+                <option>매주 화요일</option>
+                <option>매주 수요일</option>
+                <option>매주 목요일</option>
+                <option>매주 금요일</option>
+                <option>화, 목</option>
+                <option>월, 수, 금</option>
+            </select>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">시간</label>
+            <div style="margin:8px 0 4px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#4a5568;cursor:pointer;">
+                    <input type="checkbox" id="addFixedAllDay" onchange="toggleAddFixedAllDay(this)"> 하루종일
+                </label>
+            </div>
+            <div id="addFixedTimeArea" style="margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+                    <span style="font-size:13px;color:#4a5568;min-width:32px;">시작</span>
+                    <select id="addFixedStartH" style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;"></select>
+                    <span style="color:#718096;">:</span>
+                    <select id="addFixedStartM" style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;"></select>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#4a5568;cursor:pointer;margin-bottom:6px;">
+                    <input type="checkbox" id="addFixedEndCheck" onchange="toggleFixedEndArea(this,'addFixedEndArea')"> 종료 시간 설정
+                </label>
+                <div id="addFixedEndArea" style="display:none;align-items:center;gap:6px;">
+                    <span style="font-size:13px;color:#4a5568;min-width:32px;">종료</span>
+                    <select id="addFixedEndH" style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;"></select>
+                    <span style="color:#718096;">:</span>
+                    <select id="addFixedEndM" style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;"></select>
+                </div>
+            </div>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">장소</label>
+            <input type="text" id="addFixedLocation" placeholder="예: 회의실" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 20px; outline:none; box-sizing:border-box;">
+            <button onclick="submitAddFixed()" style="width:100%; padding:11px; background:#805ad5; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">추가하기</button>
+        </div>
+    </div>
+
+    <div id="noticeListModal" class="modal notice-list-modal">
+        <div class="modal-content" style="width: 460px; max-height: calc(100vh - 108px); overflow-y: auto;">
+            <span class="close-btn" onclick="closeModal('noticeListModal')">&times;</span>
+            <h3 style="margin-top:0; font-size:16px;">공지사항 전체보기</h3>
+            <div id="noticeFullList"></div>
+        </div>
+    </div>
+
+    <div id="updateListModal" class="modal update-list-modal">
+        <div class="modal-content" style="width: 400px; max-height: calc(100vh - 108px); overflow-y: auto;">
+            <span class="close-btn" onclick="closeModal('updateListModal')">&times;</span>
+            <h3 style="margin-top:0; font-size:16px;">최근 업데이트 전체보기</h3>
+            <div id="updateFullList"></div>
+        </div>
+    </div>
+
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content" style="width: 300px; text-align: center;">
+            <h3 style="margin-top:0; font-size:16px;">삭제하시겠습니까?</h3>
+            <p id="deleteConfirmText" style="color: #718096; font-size: 14px;"></p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button id="deleteConfirmYes" style="background:#e53e3e; color:white; border:none; padding:9px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;">삭제</button>
+                <button onclick="closeModal('deleteConfirmModal')" style="background:#e2e8f0; color:#4a5568; border:none; padding:9px 24px; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 일정 상세 팝업 -->
+    <div id="scheduleDetailModal" class="modal">
+        <div class="modal-content" style="width: 360px;">
+            <span class="close-btn" onclick="closeModal('scheduleDetailModal')">&times;</span>
+            <h3 id="sdModalTitle" style="margin-top:0; font-size:16px;"></h3>
+            <div id="sdModalBody"></div>
+            <div class="detail-action-row">
+                <button class="btn-detail-edit" onclick="openEditFromDetail()">✏️ 수정하기</button>
+                <button class="btn-detail-delete" onclick="deleteFromDetail()">🗑️ 삭제하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수업 수정 모달 -->
+    <div id="editTimeModal" class="modal">
+        <div class="modal-content" style="width: 400px;">
+            <span class="close-btn" onclick="closeModal('editTimeModal')">&times;</span>
+            <h3 style="margin-top:0;">수업 시간 수정</h3>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">교시</label>
+            <select id="editTimePeriod" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none;">
+                <option value="0">1교시 (09:00-09:50)</option>
+                <option value="1">2교시 (10:00-10:50)</option>
+                <option value="2">3교시 (11:00-11:50)</option>
+                <option value="3">4교시 (12:00-12:50)</option>
+                <option value="4">5교시 (13:50-14:40)</option>
+                <option value="5">6교시 (14:50-15:40)</option>
+                <option value="6">7교시 (15:50-16:40)</option>
+            </select>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">요일</label>
+            <select id="editTimeDay" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none;">
+                <option value="2">월요일</option>
+                <option value="3">화요일</option>
+                <option value="4">수요일</option>
+                <option value="5">목요일</option>
+                <option value="6">금요일</option>
+            </select>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">과목명</label>
+            <input type="text" id="editTimeSubject" placeholder="예: 수학" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none; box-sizing:border-box;">
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">학급</label>
+            <input type="text" id="editTimeClass" placeholder="예: 2-1" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 20px; outline:none; box-sizing:border-box;">
+            <button onclick="submitEditTime()" style="width:100%; padding:11px; background:#3182F6; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">수정하기</button>
+        </div>
+    </div>
+
+    <!-- 고정 일정 수정 모달 -->
+    <div id="editFixedModal" class="modal">
+        <div class="modal-content" style="width: 400px;">
+            <span class="close-btn" onclick="closeModal('editFixedModal')">&times;</span>
+            <h3 style="margin-top:0;">고정 일정 수정</h3>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">일정명</label>
+            <input type="text" id="editFixedTitle" placeholder="예: 교무회의" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none; box-sizing:border-box;">
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">반복 요일</label>
+            <select id="editFixedDay" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 14px; outline:none;">
+                <option>매주 월요일</option>
+                <option>매주 화요일</option>
+                <option>매주 수요일</option>
+                <option>매주 목요일</option>
+                <option>매주 금요일</option>
+                <option>화, 목</option>
+                <option>월, 수, 금</option>
+            </select>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">시간</label>
+            <div style="margin:8px 0 4px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#4a5568;cursor:pointer;">
+                    <input type="checkbox" id="editFixedAllDay" onchange="toggleEditFixedAllDay(this)"> 하루종일
+                </label>
+            </div>
+            <div id="editFixedTimeArea" style="margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+                    <span style="font-size:13px;color:#4a5568;min-width:32px;">시작</span>
+                    <select id="editFixedStartH" style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;"></select>
+                    <span style="color:#718096;">:</span>
+                    <select id="editFixedStartM" style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;"></select>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#4a5568;cursor:pointer;margin-bottom:6px;">
+                    <input type="checkbox" id="editFixedEndCheck" onchange="toggleFixedEndArea(this,'editFixedEndArea')"> 종료 시간 설정
+                </label>
+                <div id="editFixedEndArea" style="display:none;align-items:center;gap:6px;">
+                    <span style="font-size:13px;color:#4a5568;min-width:32px;">종료</span>
+                    <select id="editFixedEndH" style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;"></select>
+                    <span style="color:#718096;">:</span>
+                    <select id="editFixedEndM" style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;"></select>
+                </div>
+            </div>
+            <label style="font-size:13px; font-weight:600; color:#2d3748;">장소</label>
+            <input type="text" id="editFixedLocation" placeholder="예: 회의실" style="width:100%; padding:9px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; margin:8px 0 20px; outline:none; box-sizing:border-box;">
+            <button onclick="submitEditFixed()" style="width:100%; padding:11px; background:#805ad5; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">수정하기</button>
+        </div>
+    </div>
+
+    <script type="module" src="../backend/dashboard_logic.js"></script>
+    <script>
+        // 네비게이터 인디케이터
+        window.addEventListener('load',   () => window.updateNavIndicator?.());
+        window.addEventListener('resize', () => window.updateNavIndicator?.());
+
+        // ═══ 기어 드롭다운 메뉴 ═══
+        function toggleGearMenu(target) {
+            const menu  = document.getElementById(target + 'GearMenu');
+            const isOpen = menu.classList.contains('open');
+            document.querySelectorAll('.gear-dropdown').forEach(m => m.classList.remove('open'));
+            if (!isOpen) menu.classList.add('open');
+        }
+
+        // ── 삭제 모드 상태 ──
+        let ttDeleteSnap = null, fsDeleteSnap = null;
+        window.ttDeleteMode = false;
+        window.fsDeleteMode = false;
+
+        // ── 크기조절 모드 상태 ──
+        let ttResizeSnap = null, fsResizeSnap = null;
+        window.ttResizeMode = false;
+        window.fsResizeMode = false;
+
+        function gearAction(target, action) {
+            document.querySelectorAll('.gear-dropdown').forEach(m => m.classList.remove('open'));
+            if (action === 'resize') {
+                enterResizeMode(target);
+            } else if (action === 'delete') {
+                enterDeleteMode(target);
+            }
+        }
+
+        function enterDeleteMode(target) {
+            if (target === 'tt') {
+                const tbody = document.querySelector('.timetable tbody');
+                if (!tbody) return;
+                ttDeleteSnap = tbody.innerHTML;
+                window.ttDeleteMode = true;
+                tbody.querySelectorAll('.class-cell').forEach(el => addDeleteX(el));
+                document.getElementById('ttActionArea').innerHTML = `
+                    <button class="btn-save-mode" onclick="saveDeleteMode('tt')">저장</button>
+                    <button class="btn-cancel-mode" onclick="cancelDeleteMode('tt')">취소</button>
+                `;
+            } else {
+                const card = document.querySelector('.fixed-schedule-card');
+                if (!card) return;
+                fsDeleteSnap = card.innerHTML;
+                window.fsDeleteMode = true;
+                card.querySelectorAll('.fixed-item').forEach(el => addDeleteX(el));
+                document.getElementById('fsActionArea').innerHTML = `
+                    <button class="btn-save-mode" onclick="saveDeleteMode('fs')">저장</button>
+                    <button class="btn-cancel-mode" onclick="cancelDeleteMode('fs')">취소</button>
+                `;
+            }
+        }
+
+        function addDeleteX(el) {
+            if (el.querySelector('.delete-x-btn')) return;
+            const btn = document.createElement('button');
+            btn.className = 'delete-x-btn';
+            btn.innerHTML = '✕';
+            btn.style.display = 'flex';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if (el.classList.contains('class-cell')) {
+                    const td = el.closest('td');
+                    if (td) td.innerHTML = '';
+                } else {
+                    el.remove();
+                }
+            };
+            el.appendChild(btn);
+        }
+
+        function saveDeleteMode(target) {
+            if (target === 'tt') {
+                document.querySelectorAll('.timetable .delete-x-btn').forEach(b => b.remove());
+                ttDeleteSnap = null;
+                window.ttDeleteMode = false;
+                restoreTTActions();
+            } else {
+                document.querySelectorAll('.fixed-schedule-card .delete-x-btn').forEach(b => b.remove());
+                const items = document.querySelectorAll('.fixed-item');
+                items.forEach(i => i.classList.remove('last'));
+                if (items.length > 0) items[items.length - 1].classList.add('last');
+                fsDeleteSnap = null;
+                window.fsDeleteMode = false;
+                restoreFSActions();
+            }
+            window.saveScheduleToFirebase?.();
+        }
+
+        function cancelDeleteMode(target) {
+            if (target === 'tt') {
+                if (ttDeleteSnap !== null) document.querySelector('.timetable tbody').innerHTML = ttDeleteSnap;
+                ttDeleteSnap = null;
+                window.ttDeleteMode = false;
+                restoreTTActions();
+            } else {
+                if (fsDeleteSnap !== null) document.querySelector('.fixed-schedule-card').innerHTML = fsDeleteSnap;
+                fsDeleteSnap = null;
+                window.fsDeleteMode = false;
+                restoreFSActions();
+            }
+        }
+
+        function restoreTTActions() {
+            document.getElementById('ttActionArea').innerHTML = `
+                <button class="btn-add-blue" onclick="openAddTimeModal()">+ 시간 추가</button>
+                <div class="gear-menu-wrap" id="ttGearWrap">
+                    <button class="btn-size-gear" id="ttGearBtn" onclick="toggleGearMenu('tt')" title="옵션">⚙️</button>
+                    <ul class="gear-dropdown" id="ttGearMenu">
+                        <li onclick="gearAction('tt','resize')"><span class="gear-icon">⤢</span>크기조절</li>
+                        <li class="danger" onclick="gearAction('tt','delete')"><span class="gear-icon">🗑️</span>삭제하기</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        function restoreFSActions() {
+            document.getElementById('fsActionArea').innerHTML = `
+                <button class="btn-add-purple" onclick="openAddFixedModal()">+ 추가</button>
+                <div class="gear-menu-wrap" id="fsGearWrap">
+                    <button class="btn-size-gear" id="fsGearBtn" onclick="toggleGearMenu('fs')" title="옵션">⚙️</button>
+                    <ul class="gear-dropdown" id="fsGearMenu">
+                        <li onclick="gearAction('fs','resize')"><span class="gear-icon">⤢</span>크기조절</li>
+                        <li class="danger" onclick="gearAction('fs','delete')"><span class="gear-icon">🗑️</span>삭제하기</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        // ── 크기조절 모드 함수 ──
+        function enterResizeMode(target) {
+            if (target === 'tt') {
+                const leftPanel = document.querySelector('.calendar-left');
+                ttResizeSnap = {
+                    width: leftPanel?.getBoundingClientRect().width ?? null,
+                    rowH: getComputedStyle(document.documentElement).getPropertyValue('--tt-row-h').trim() || '56px'
+                };
+                window.ttResizeMode = true;
+                // 비주얼 리사이즈 핸들 활성화
+                const wrap = document.getElementById('ttWrap');
+                if (wrap) wrap.classList.add('resize-on');
+                document.getElementById('calDivider')?.classList.add('active');
+                document.getElementById('ttActionArea').innerHTML = `
+                    <button class="btn-save-mode" onclick="saveResizeMode('tt')">저장</button>
+                    <button class="btn-cancel-mode" onclick="cancelResizeMode('tt')">취소</button>
+                `;
+            } else {
+                const rightPanel = document.querySelector('.calendar-right');
+                fsResizeSnap = {
+                    width: rightPanel?.getBoundingClientRect().width ?? null
+                };
+                window.fsResizeMode = true;
+                const wrap = document.getElementById('fsWrap');
+                if (wrap) wrap.classList.add('resize-on');
+                document.getElementById('fsActionArea').innerHTML = `
+                    <button class="btn-save-mode" onclick="saveResizeMode('fs')">저장</button>
+                    <button class="btn-cancel-mode" onclick="cancelResizeMode('fs')">취소</button>
+                `;
+            }
+        }
+
+        function saveResizeMode(target) {
+            if (target === 'tt') {
+                const leftPanel = document.querySelector('.calendar-left');
+                const w = leftPanel?.getBoundingClientRect().width;
+                if (w) localStorage.setItem('edutrack_tt_width', Math.round(w));
+                const rowH = getComputedStyle(document.documentElement).getPropertyValue('--tt-row-h').trim() || '56px';
+                localStorage.setItem('edutrack_tt_rowh', rowH);
+                ttResizeSnap = null;
+                window.ttResizeMode = false;
+                document.getElementById('ttWrap')?.classList.remove('resize-on');
+                document.getElementById('calDivider')?.classList.remove('active');
+                restoreTTActions();
+            } else {
+                const rightPanel = document.querySelector('.calendar-right');
+                const w = rightPanel?.getBoundingClientRect().width;
+                if (w) localStorage.setItem('edutrack_fs_width', Math.round(w));
+                fsResizeSnap = null;
+                window.fsResizeMode = false;
+                document.getElementById('fsWrap')?.classList.remove('resize-on');
+                restoreFSActions();
+            }
+        }
+
+        function cancelResizeMode(target) {
+            if (target === 'tt') {
+                if (ttResizeSnap) {
+                    const leftPanel = document.querySelector('.calendar-left');
+                    if (leftPanel && ttResizeSnap.width) {
+                        leftPanel.style.width = ttResizeSnap.width + 'px';
+                        leftPanel.style.flex  = '0 0 ' + ttResizeSnap.width + 'px';
+                    }
+                    document.documentElement.style.setProperty('--tt-row-h', ttResizeSnap.rowH);
+                }
+                ttResizeSnap = null;
+                window.ttResizeMode = false;
+                document.getElementById('ttWrap')?.classList.remove('resize-on');
+                document.getElementById('calDivider')?.classList.remove('active');
+                restoreTTActions();
+            } else {
+                if (fsResizeSnap) {
+                    const rightPanel = document.querySelector('.calendar-right');
+                    if (rightPanel && fsResizeSnap.width) {
+                        rightPanel.style.width = fsResizeSnap.width + 'px';
+                        rightPanel.style.flex  = '0 0 ' + fsResizeSnap.width + 'px';
+                    }
+                }
+                fsResizeSnap = null;
+                window.fsResizeMode = false;
+                document.getElementById('fsWrap')?.classList.remove('resize-on');
+                restoreFSActions();
+            }
+        }
+
+        // ═══ 드래그 리사이즈 ═══
+        function toggleResizeMode(target) {
+            const wrap    = document.getElementById(target + 'Wrap');
+            const gear    = document.getElementById(target + 'GearBtn');
+            const divider = document.getElementById('calDivider');
+            const isOn    = wrap.classList.contains('resize-on');
+
+            document.querySelectorAll('.resize-wrap').forEach(w => w.classList.remove('resize-on'));
+            document.querySelectorAll('.btn-size-gear').forEach(g => g.classList.remove('active'));
+            divider.classList.remove('active');
+
+            if (!isOn) {
+                wrap.classList.add('resize-on');
+                gear.classList.add('active');
+                if (target === 'tt') divider.classList.add('active');
+            }
+        }
+
+        document.addEventListener('pointerdown', e => {
+            if (!e.target.closest('.gear-menu-wrap')) {
+                document.querySelectorAll('.gear-dropdown').forEach(m => m.classList.remove('open'));
+            }
+            // 크기조절 모드 중일 때는 저장/취소 버튼으로만 종료 가능
+            if (window.ttResizeMode || window.fsResizeMode) return;
+            if (!e.target.closest('.gear-menu-wrap') &&
+                !e.target.closest('.resize-handle-bottom') &&
+                !e.target.closest('.resize-handle-right') &&
+                !e.target.closest('.resize-handle-left') &&
+                !e.target.closest('.resize-handle-divider')) {
+                document.querySelectorAll('.resize-wrap').forEach(w => w.classList.remove('resize-on'));
+                document.querySelectorAll('.btn-size-gear').forEach(g => g.classList.remove('active'));
+                document.getElementById('calDivider')?.classList.remove('active');
+            }
+        }, true);
+
+        function startDrag(e, onMove, onEnd) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.body.style.userSelect = 'none';
+
+            function moveHandler(ev) { onMove(ev.clientX, ev.clientY); }
+            function upHandler()     {
+                document.removeEventListener('pointermove', moveHandler);
+                document.removeEventListener('pointerup',  upHandler);
+                document.body.style.userSelect = '';
+                document.body.style.cursor = '';
+                if (onEnd) onEnd();
+            }
+            document.addEventListener('pointermove', moveHandler);
+            document.addEventListener('pointerup',  upHandler);
+        }
+
+        function initTTBottomResize() {
+            const handle = document.getElementById('ttBottomHandle');
+            if (!handle) return;
+
+            handle.addEventListener('pointerdown', e => {
+                const timetable = document.querySelector('.timetable');
+                const tds = timetable?.querySelectorAll('tbody tr:not(.lunch-row) td:first-child');
+                if (!tds?.length) return;
+
+                const startRowH = tds[0].getBoundingClientRect().height;
+                const numRows   = timetable.querySelectorAll('tbody tr').length;
+                const startY    = e.clientY;
+                document.body.style.cursor = 's-resize';
+
+                startDrag(e, (cx, cy) => {
+                    const delta   = cy - startY;
+                    const newRowH = Math.max(28, Math.min(110, startRowH + delta / numRows));
+                    document.documentElement.style.setProperty('--tt-row-h', newRowH + 'px');
+                });
+            });
+        }
+
+        function initFSBottomResize() {
+            const handle = document.getElementById('fsBottomHandle');
+            if (!handle) return;
+
+            handle.addEventListener('pointerdown', e => {
+                const card = document.querySelector('.fixed-schedule-card');
+                if (!card) return;
+
+                const startH = card.offsetHeight;
+                const startY = e.clientY;
+                document.body.style.cursor = 's-resize';
+
+                card.style.height = startH + 'px';
+                card.style.overflowY = 'auto';
+
+                startDrag(e, (cx, cy) => {
+                    const newH = Math.max(80, startH + (cy - startY));
+                    card.style.height = newH + 'px';
+                });
+            });
+        }
+
+        function getResizeBounds() {
+            const leftPanel  = document.querySelector('.calendar-left');
+            const rightPanel = document.querySelector('.calendar-right');
+            const divider    = document.getElementById('calDivider');
+            const container  = document.querySelector('.calendar-two-col');
+            const totalW  = container.getBoundingClientRect().width;
+            const divW    = divider ? divider.getBoundingClientRect().width : 18;
+            const leftW   = leftPanel  ? leftPanel.getBoundingClientRect().width  : 300;
+            const rightW  = rightPanel ? rightPanel.getBoundingClientRect().width : 200;
+            return { totalW, divW, leftW, rightW };
+        }
+
+        function initCalendarPanels() {
+            const leftPanel  = document.querySelector('.calendar-left');
+            const rightPanel = document.querySelector('.calendar-right');
+            if (!leftPanel || !rightPanel) return;
+
+            const savedLW   = localStorage.getItem('edutrack_tt_width');
+            const savedRW   = localStorage.getItem('edutrack_fs_width');
+            const savedRowH = localStorage.getItem('edutrack_tt_rowh');
+
+            if (savedLW) {
+                leftPanel.style.width = savedLW + 'px';
+                leftPanel.style.flex  = '0 0 ' + savedLW + 'px';
+            } else {
+                const w = leftPanel.getBoundingClientRect().width;
+                leftPanel.style.width = w + 'px';
+                leftPanel.style.flex  = '0 0 ' + w + 'px';
+            }
+
+            if (savedRW) {
+                rightPanel.style.width = savedRW + 'px';
+                rightPanel.style.flex  = '0 0 ' + savedRW + 'px';
+            } else {
+                const w = rightPanel.getBoundingClientRect().width;
+                rightPanel.style.width = w + 'px';
+                rightPanel.style.flex  = '0 0 ' + w + 'px';
+            }
+
+            if (savedRowH) {
+                document.documentElement.style.setProperty('--tt-row-h', savedRowH);
+            }
+        }
+
+        function initTTRightResize() {
+            const handle     = document.getElementById('ttRightHandle');
+            const leftPanel  = document.querySelector('.calendar-left');
+            if (!handle || !leftPanel) return;
+
+            handle.addEventListener('pointerdown', e => {
+                const startX = e.clientX;
+                const startW = leftPanel.getBoundingClientRect().width;
+                document.body.style.cursor = 'e-resize';
+
+                startDrag(e, (cx) => {
+                    const { totalW, divW, rightW } = getResizeBounds();
+                    const minW = totalW * 0.28;
+                    const maxW = totalW - divW - rightW;
+                    const newW = Math.max(minW, Math.min(maxW, startW + (cx - startX)));
+                    leftPanel.style.width = newW + 'px';
+                    leftPanel.style.flex  = '0 0 ' + newW + 'px';
+                });
+            });
+        }
+
+        function initFSRightResize() {
+            const handle     = document.getElementById('fsRightHandle');
+            const rightPanel = document.querySelector('.calendar-right');
+            if (!handle || !rightPanel) return;
+
+            handle.addEventListener('pointerdown', e => {
+                const startX = e.clientX;
+                const startW = rightPanel.getBoundingClientRect().width;
+                document.body.style.cursor = 'e-resize';
+
+                startDrag(e, (cx) => {
+                    const { totalW, divW, leftW } = getResizeBounds();
+                    const minW = 180;
+                    const maxW = totalW - divW - leftW * 0.28;
+                    // 오른쪽 드래그(cx 증가) → 패널 확장
+                    const newW = Math.max(minW, Math.min(maxW, startW + (cx - startX)));
+                    rightPanel.style.width = newW + 'px';
+                    rightPanel.style.flex  = '0 0 ' + newW + 'px';
+                });
+            });
+        }
+
+        function initDividerResize() {
+            const divider    = document.getElementById('calDivider');
+            const leftPanel  = document.querySelector('.calendar-left');
+            const rightPanel = document.querySelector('.calendar-right');
+            const container  = document.querySelector('.calendar-two-col');
+            if (!divider || !leftPanel || !rightPanel || !container) return;
+
+            divider.addEventListener('pointerdown', e => {
+                const startX  = e.clientX;
+                const startLW = leftPanel.getBoundingClientRect().width;
+                const startRW = rightPanel.getBoundingClientRect().width;
+                document.body.style.cursor = 'col-resize';
+
+                startDrag(e, (cx) => {
+                    const totalW = container.getBoundingClientRect().width;
+                    const divW   = divider.getBoundingClientRect().width;
+                    const delta  = cx - startX;
+                    const minLW  = totalW * 0.28;
+                    const minRW  = 180;
+                    const newLW  = Math.max(minLW, Math.min(totalW - divW - minRW, startLW + delta));
+                    const newRW  = Math.max(minRW, Math.min(totalW - divW - minLW, startRW - delta));
+                    leftPanel.style.width  = newLW + 'px';
+                    leftPanel.style.flex   = '0 0 ' + newLW + 'px';
+                    rightPanel.style.width = newRW + 'px';
+                    rightPanel.style.flex  = '0 0 ' + newRW + 'px';
+                });
+            });
+        }
+
+        window.addEventListener('load', () => {
+            window.updateNavIndicator?.();
+            initCalendarPanels();
+            initTTBottomResize();
+            initFSBottomResize();
+            initTTRightResize();
+            initFSRightResize();
+            initDividerResize();
+        });
+        window.addEventListener('resize', () => window.updateNavIndicator?.());
+
+        window.setQCount = function(n) {
+            n = Math.min(100, Math.max(1, +n || 1));
+            const input = document.getElementById('qCountSelect');
+            if (input) input.value = n;
+            document.querySelectorAll('#qChipRow button').forEach(btn => {
+                const active = +btn.dataset.q === n;
+                btn.style.background  = active ? '#3182F6' : '#fff';
+                btn.style.color       = active ? '#fff'    : '#4a5568';
+                btn.style.borderColor = active ? '#3182F6' : '#ccc';
+            });
+            window.generateTeacherOMR?.(n);
+        };
+
+    </script>
+    </div><!-- /#main-wrapper -->
+
+    <div class="dock-container" id="dockContainer">
+        <div class="dock-panel" id="dockPanel">
+            <div class="dock-expandable" id="dockExpandable">
+                <button class="dock-item" data-label="공지사항" onclick="showView('noticeView')">
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span class="dock-badge" id="dockNoticeBadge" style="display:none">0</span>
+                </button>
+                <button class="dock-item" data-label="학생 목록" onclick="showView('rosterView')">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </button>
+                <button class="dock-item" data-label="디지털 OMR" onclick="showView('reportView')">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </button>
+                <button class="dock-item" data-label="새 평가 등록" onclick="openEvalModal()">
+                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                </button>
+                <div class="dock-sep"></div>
+                <button class="dock-item" data-label="환경설정" onclick="openSettingsModal()">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
+                <button class="dock-item dock-logout" data-label="로그아웃" onclick="document.getElementById('logoutBtn').click()">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+
+            <div class="dock-trigger" id="dockTrigger">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const container  = document.getElementById('dockContainer');
+        const panel      = document.getElementById('dockPanel');
+        const expandable = document.getElementById('dockExpandable');
+        const trigger    = document.getElementById('dockTrigger');
+        if (!container || !panel || !expandable || !trigger) return;
+
+        const items = expandable.querySelectorAll('.dock-item');
+
+        // 각 아이템 안에 이름 라벨 span 삽입
+        items.forEach(item => {
+            if (item.dataset.label) {
+                const lbl = document.createElement('span');
+                lbl.className = 'dock-label';
+                lbl.textContent = item.dataset.label;
+                item.appendChild(lbl);
+            }
+        });
+
+        const BASE  = 44;
+        const MAX   = 62;
+        const REACH = 110;
+        const SNAP_SIDE   = 18;  
+        const SNAP_TOP    = 72;  
+        const SNAP_BOTTOM = 18;  
+
+        let currentEdge = 'right';
+        let edgePos = 90; // 기본값: 우하단 모서리
+
+        const isHorizontal = () => currentEdge === 'top' || currentEdge === 'bottom';
+
+        function applyExpandDir(toRight) {
+            panel.style.flexDirection = toRight ? 'row-reverse' : 'row';
+        }
+
+        function applySavedPosition() {
+            localStorage.removeItem('edutrack_dock_pos');
+            try {
+                const saved = JSON.parse(localStorage.getItem('edutrack_dock_pos_v2'));
+                if (saved?.pos != null) edgePos = saved.pos;
+            } catch(e) {}
+            currentEdge = 'right';
+            if (edgePos < 5 || edgePos > 97) edgePos = 85;
+            applyEdge(currentEdge, edgePos, false);
+        }
+
+        function savePosition() {
+            localStorage.setItem('edutrack_dock_pos_v2',
+                JSON.stringify({ edge: currentEdge, pos: edgePos }));
+        }
+
+        function applyEdge(edge, pos, animate) {
+            const CORNER = 22; // 가장자리 22% 이내면 코너로 판단
+
+            if (!animate) container.classList.add('dragging');
+            container.classList.remove('edge-left','edge-right','edge-top','edge-bottom');
+            container.classList.add('edge-' + edge);
+            container.style.cssText = '';
+            container.style.position = 'fixed';
+            container.style.zIndex   = '500';
+            container.style.pointerEvents = 'none';
+            if (!animate) container.style.transition = 'none';
+
+            const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+            const p = clamp(pos, 8, 92);
+
+            if (edge === 'left' || edge === 'right') {
+                const navH  = document.querySelector('.top-nav')?.offsetHeight ?? 58;
+                const vh    = window.innerHeight;
+                const minP  = ((navH + 8) / vh) * 100;
+                const safeP = Math.max(minP, Math.min(96, p));
+
+                container.style[edge]   = SNAP_SIDE + 'px';
+                container.style.top     = safeP + '%';
+                container.style.bottom  = 'auto';
+                container.style.transform = 'translateY(-50%)';
+                panel.classList.remove('expand-down');
+                panel.style.flexDirection = '';
+                container.classList.remove('corner-top', 'corner-bottom');
+                // 팝업 방향: 상반부 → 아래로, 하반부 → 위로
+                container.classList.add(safeP < 50 ? 'corner-top' : 'corner-bottom');
+            } else {
+                // top / bottom 엣지
+                container.style[edge] = (edge === 'top' ? SNAP_TOP : SNAP_BOTTOM) + 'px';
+                panel.classList.remove('expand-down');
+                if (p <= CORNER) {
+                    // 좌측 코너: 왼쪽에 픽셀 고정, 오른쪽으로 확장
+                    container.style.left = SNAP_SIDE + 'px';
+                    container.style.transform = '';
+                    applyExpandDir(true);
+                } else if (p >= 100 - CORNER) {
+                    // 우측 코너: 오른쪽에 픽셀 고정, 왼쪽으로 확장
+                    container.style.right = SNAP_SIDE + 'px';
+                    container.style.transform = '';
+                    applyExpandDir(false);
+                } else {
+                    container.style.left = p + '%';
+                    container.style.transform = 'translateX(-50%)';
+                    applyExpandDir(p < 60);
+                }
+            }
+
+            if (!animate) {
+                requestAnimationFrame(() => {
+                    container.classList.remove('dragging');
+                    container.style.transition = '';
+                });
+            }
+            ensureInBounds();
+        }
+
+        // 독이 화면 경계를 벗어나지 않도록 보정
+        function ensureInBounds() {
+            requestAnimationFrame(() => {
+                const rect  = panel.getBoundingClientRect();
+                const navH  = document.querySelector('.top-nav')?.offsetHeight ?? 58;
+                const vh    = window.innerHeight;
+                const margin = 8;
+                if (rect.top < navH + margin) {
+                    edgePos = ((navH + margin + rect.height / 2) / vh) * 100;
+                    container.style.top = edgePos + '%';
+                } else if (rect.bottom > vh - margin) {
+                    edgePos = ((vh - margin - rect.height / 2) / vh) * 100;
+                    container.style.top = edgePos + '%';
+                }
+            });
+        }
+
+        window.addEventListener('resize', () => applyEdge(currentEdge, edgePos, false));
+
+        let dragActive = false;
+        const DRAG_THRESHOLD = 6;
+
+        trigger.addEventListener('pointerdown', e => {
+            const sx = e.clientX, sy = e.clientY;
+            let moved = false;
+
+            function onMove(mv) {
+                const dx = mv.clientX - sx, dy = mv.clientY - sy;
+                if (!moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+                moved = true;
+
+                if (!dragActive) {
+                    dragActive = true;
+                    items.forEach(it => { it.style.transitionDelay='0ms'; it.classList.remove('visible'); });
+                    setTimeout(() => expandable.classList.remove('open'), 150);
+                    container.classList.add('dragging');
+                    container.style.transition = 'none';
+                }
+
+                container.style.right  = 'auto';
+                container.style.bottom = 'auto';
+                container.style.transform = 'translate(-50%, -50%)';
+                const navH  = document.querySelector('.top-nav')?.offsetHeight ?? 58;
+                const safeY = Math.max(navH + 22, Math.min(window.innerHeight - 22, mv.clientY));
+                const safeX = Math.max(22, Math.min(window.innerWidth - 22, mv.clientX));
+                container.style.left = safeX + 'px';
+                container.style.top  = safeY + 'px';
+            }
+
+            function onUp(ev) {
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', onUp);
+
+                if (!moved || !dragActive) { dragActive = false; return; }
+                dragActive = false;
+
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const x = ev.clientX, y = ev.clientY;
+
+                // 드롭한 Y 위치를 % 로 변환해 우측에 배치
+                const navH = document.querySelector('.top-nav')?.offsetHeight ?? 58;
+                const clampedY = Math.max(navH + 8, Math.min(vh - 8, y));
+                currentEdge = 'right';
+                edgePos     = (clampedY / vh) * 100;
+
+                applyEdge(currentEdge, edgePos, true);
+                savePosition();
+            }
+
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', onUp);
+        });
+
+        let expandTimer, collapseTimer;
+
+        // 펼쳐졌을 때 아이템이 화면 밖으로 나가지 않도록 maxHeight 계산
+        function calcExpandableMaxH() {
+            const navH = document.querySelector('.top-nav')?.offsetHeight ?? 58;
+            const vh   = window.innerHeight;
+            // 패널 패딩 10px, 트리거 44px, 갭 8px
+            if (edgePos <= 20) {
+                // 상단 코너: 트리거 아래 → 화면 하단
+                // 아이템 시작 = (navH+10) + 10(패딩) + 44(트리거) + 8(갭) = navH+72
+                return Math.max(44, Math.min(520, vh - (navH + 72) - 8));
+            } else {
+                // 하단 코너: 트리거 위 → 내비바 아래
+                // 트리거 상단 = vh - 18(bottom) - 10(패딩) - 44(트리거) = vh-72
+                // 아이템 최상단 = navH + 8
+                return Math.max(44, Math.min(520, (vh - 72) - (navH + 8) - 8));
+            }
+        }
+
+        panel.addEventListener('mouseenter', () => {
+            if (dragActive) return;
+            clearTimeout(collapseTimer);
+            expandTimer = setTimeout(() => {
+                expandable.classList.add('open');
+                items.forEach((item, i) => {
+                    item.style.transitionDelay = `${i * 35}ms`;
+                    item.classList.add('visible');
+                });
+            }, 60);
+        });
+
+        panel.addEventListener('mouseleave', () => {
+            clearTimeout(expandTimer);
+            collapseTimer = setTimeout(() => {
+                items.forEach(item => {
+                    item.style.transitionDelay = '0ms';
+                    item.classList.remove('visible');
+                });
+                setTimeout(() => expandable.classList.remove('open'), 200);
+            }, 80);
+        });
+
+        panel.addEventListener('mousemove', e => {
+            if (!expandable.classList.contains('open') || dragActive) return;
+            const horiz = isHorizontal();
+            items.forEach(item => {
+                // 스케일: SVG 아이콘 중심 기준으로 근접도 계산 (라벨 영역 무시)
+                const svg = item.querySelector('svg');
+                const ref = svg ? svg.getBoundingClientRect() : item.getBoundingClientRect();
+                const cx  = ref.left + ref.width  / 2;
+                const cy  = ref.top  + ref.height / 2;
+                const c   = horiz ? cx : cy;
+                const m   = horiz ? e.clientX : e.clientY;
+                const t   = Math.max(0, 1 - Math.abs(m - c) / REACH);
+                const s   = 1 + (MAX / BASE - 1) * (t * t);
+                item.style.transform       = `scale(${s.toFixed(3)})`;
+                item.style.transformOrigin = horiz ? 'center bottom' : 'right center';
+
+                // near-icon: SVG 주변 일정 범위 안에 있을 때만 강조효과 적용
+                const ZONE = 24;
+                const nearIcon = e.clientX >= ref.left - ZONE && e.clientX <= ref.right  + ZONE &&
+                                 e.clientY >= ref.top  - ZONE && e.clientY <= ref.bottom + ZONE;
+                item.classList.toggle('near-icon', nearIcon);
+            });
+        });
+
+        panel.addEventListener('mouseleave', () => {
+            items.forEach(it => {
+                it.style.transform = 'scale(1)';
+                it.classList.remove('near-icon');
+            });
+        });
+
+        applySavedPosition();
+    })();
+    </script>
+</body>
+</html>

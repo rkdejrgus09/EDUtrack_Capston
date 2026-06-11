@@ -1,0 +1,197 @@
+/* ═══════════════════════════════════════════════════════════════
+   테마 오버라이드 — 라이트/다크 모드 (반드시 마지막에 로드)
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════
+   다크 모드 (시스템 설정 기반)
+   OKLCH 색공간 기준, hex 폴백 병기
+═══════════════════════════════════════════════ */
+/* 라이트모드: 상단 nav 흰색 + 그림자 */
+@media (prefers-color-scheme: light) {
+    .top-nav {
+        background: #ffffff;
+        box-shadow: 0 1px 10px rgba(0,0,0,0.09);
+    }
+    .nav-logo { color: #1a202c; }
+    .nav-item { color: #718096; }
+    .nav-item:hover { color: #2d3748; }
+    .nav-item.active { color: var(--primary); font-weight: 700; }
+    .nav-indicator { background: linear-gradient(90deg, var(--primary), #5a9cf8); box-shadow: 0 0 6px rgba(49,130,246,0.4); }
+    .nav-greeting { color: #a0aec0; }
+    .nav-greeting span { color: #4a5568; }
+    .nav-settings-btn {
+        background: var(--surface-2);
+        border-color: #e2e8f0;
+        color: var(--text-3);
+    }
+    .nav-settings-btn:hover { background: #e8ecf0; color: #2d3748; }
+    .nav-logout-btn {
+        background: #fff5f5;
+        border-color: rgba(229,57,53,0.25);
+        color: #e53e3e;
+    }
+    .nav-logout-btn:hover { background: #fed7d7; }
+    .nav-left .nav-logo { color: #1a202c; }
+
+    /* 라이트 모드 — 상단 단축 바를 top-nav 와 동일하게 */
+    .top-bar {
+        background: #ffffff;
+        box-shadow: 0 1px 10px rgba(0,0,0,0.09);
+        border-bottom-color: transparent;
+    }
+    .topbar-shortcut-btn       { color: #718096; }
+    .topbar-shortcut-btn:hover { color: #2d3748; }
+    .topbar-shortcut-btn.active { color: var(--primary); }
+    .topbar-shortcut-btn.active::after {
+        background: linear-gradient(90deg, var(--primary), #5a9cf8);
+        box-shadow: 0 0 6px rgba(49,130,246,0.4);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg:            #131620;            /* oklch(14% 0.016 260) */
+        --surface:       #1b1f30;            /* oklch(19% 0.018 260) */
+        --surface-2:     #21263c;            /* oklch(23% 0.02  260) */
+        --surface-3:     #1e2238;            /* oklch(21% 0.018 260) */
+        --border:        rgba(255,255,255,0.08);
+        --border-subtle: rgba(255,255,255,0.05);
+
+        /* ── 다크모드 텍스트 계층 ──
+           배경 #1b1f30 기준 대비비 (WCAG)
+           --text-1 : 14:1  제목/헤딩
+           --text-2 :  9:1  본문 (읽히는 텍스트)
+           --text-3 :  6:1  보조 (라벨, 서브타이틀)
+           --text-4 :  4:1  흐린 (날짜, 시각)
+           --text-5 :  2.5:1 최소 (placeholder)
+        */
+        --text-1:        #f2f4fc;            /* oklch(96% 0.008 265)  14.4:1 */
+        --text-2:        #c4c8e8;            /* oklch(84% 0.020 265)   9.2:1 */
+        --text-3:        #9ca2c8;            /* oklch(72% 0.025 265)   5.8:1 */
+        --text-4:        #7880b8;            /* oklch(62% 0.028 265)   3.9:1 */
+        --text-5:        #6068a8;            /* oklch(54% 0.028 265)   3.0:1 */
+    }
+
+    /* ─── 인라인 style 속성 하드코딩 강제 오버라이드 ───
+       CSS 변수는 인라인 style을 덮을 수 없으므로
+       attribute selector + !important 사용
+       (*= 부분 일치이므로 세미콜론 유무 상관없이 커버)
+    */
+
+    /* 어두운 텍스트 계열 → text-1 (제목급) */
+    [style*="color: #1a202c"], [style*="color:#1a202c"],
+    [style*="color: #333"],    [style*="color:#333"] {
+        color: var(--text-1) !important;
+    }
+
+    /* 본문 텍스트 → text-2 */
+    [style*="color: #2d3748"], [style*="color:#2d3748"],
+    [style*="color: #495057"], [style*="color:#495057"] {
+        color: var(--text-2) !important;
+    }
+
+    /* 보조 텍스트 → text-3 */
+    [style*="color: #666"],    [style*="color:#666"] {
+        color: var(--text-3) !important;
+    }
+
+    /* 흐린 텍스트 → text-4 */
+    [style*="color: #888"],    [style*="color:#888"],
+    [style*="color: #718096"], [style*="color:#718096"],
+    [style*="color: #a0aec0"], [style*="color:#a0aec0"],
+    [style*="color: #b0bec5"], [style*="color:#b0bec5"] {
+        color: var(--text-4) !important;
+    }
+
+    /* 텍스트·테두리·표면색은 :root 변수 재정의로 자동 처리됨 */
+    /* 아래는 변수만으로 해결 안 되는 특수 케이스만 명시 */
+
+    /* 카드 그림자 (다크에서 더 강하게) */
+    .card, .schedule-card {
+        box-shadow: 0 1px 8px rgba(0,0,0,0.4);
+    }
+
+    /* 시간표 특수 행 */
+    .current-period-row { background: rgba(49,130,246,0.12); }
+    .lunch-row          { background: rgba(255,255,255,0.03); }
+
+    /* 수업 셀 */
+    .class-cell                    { background: rgba(43,108,176,0.22); color: #63b3ed; }
+    .class-cell.current-class      { background: #3182F6; color: #fff; }
+    .class-cell.current-class small{ color: #bee3f8; }
+
+    /* 상태/태그 뱃지 */
+    .status-active { background: rgba(56,161,105,0.2);  color: #68d391; }
+    .status-hold   { background: rgba(236,201,75,0.15); color: #f6e05e; }
+    .tag-complete  { background: rgba(66,153,225,0.18); color: #63b3ed; }
+    .tag-pending   { background: rgba(252,129,74,0.18); color: #fc8181; }
+    .tag-study     { background: rgba(56,161,105,0.18); color: #68d391; }
+
+    /* 드롭존 */
+    .drop-zone { background-color: rgba(49,130,246,0.1); }
+
+    /* 모달 배경 및 그림자 */
+    .modal-content {
+        background-color: var(--surface);
+        color: var(--text-2);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+
+    /* 공지사항 / 최근 업데이트 전체보기 모달 */
+    .notice-full-item { border-bottom-color: var(--border-subtle); }
+    .notice-full-body { background: var(--surface-3); color: var(--text-3); }
+
+    /* 설정 탭 활성 */
+    .stab.active { box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+
+    /* 드롭다운 화살표 (다크용 밝은 색) */
+    .s-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237880b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+
+    /* 스크롤바 */
+    ::-webkit-scrollbar            { width: 6px; }
+    ::-webkit-scrollbar-track      { background: var(--surface); }
+    ::-webkit-scrollbar-thumb      { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,0.18); }
+
+    /* ── 모달 입력 요소 (환경설정·새 평가 등록·일정 추가 등) ── */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    select,
+    textarea {
+        background-color: var(--surface-2) !important;
+        color: var(--text-2) !important;
+        border-color: var(--border) !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--text-5) !important;
+        opacity: 1;
+    }
+
+    /* 설정 모달 전용 입력 */
+    .s-input { background: var(--surface-2); }
+
+    /* 인라인 style로 하드코딩된 밝은 배경 오버라이드 */
+    [style*="background: #f8f9fa"],
+    [style*="background:#f8f9fa"],
+    [style*="background-color: #f8f9fa"] {
+        background: var(--surface-2) !important;
+    }
+
+    /* 인라인 style로 하드코딩된 흰 배경 오버라이드 (모달 내부 섹션) */
+    .modal-content [style*="background:#fff"],
+    .modal-content [style*="background: #fff"],
+    .modal-content [style*="background-color: #fff"],
+    .modal-content [style*="background-color:#fff"] {
+        background: var(--surface) !important;
+    }
+
+    /* select 옵션 목록 배경 */
+    select option {
+        background-color: var(--surface-2);
+        color: var(--text-2);
+    }
+}

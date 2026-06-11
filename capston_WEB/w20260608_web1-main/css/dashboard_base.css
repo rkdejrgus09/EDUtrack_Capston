@@ -1,0 +1,379 @@
+/* ═══════════════════════════════════════════════════════════════
+   통합 대시보드 — 공통 베이스 (토큰 · 리셋 · 카드 · 모달 · 환경설정 · 유틸)
+═══════════════════════════════════════════════════════════════ */
+
+
+/* ── 테마 토큰 · 리셋 · 본문 ── */
+:root {
+    --primary: #3182F6;
+    --secondary: #1a2332;
+    --success: #2ecc71;
+    --warning: #f1c40f;
+    --danger: #e74c3c;
+    --bg: #f4f7f9;
+
+    /* 테마 토큰 (라이트 기본값) */
+    --surface:          #ffffff;
+    --surface-2:        #f8f9fa;
+    --surface-3:        #f7fafc;
+    --border:           #e8ecf0;
+    --border-subtle:    #f0f4f8;
+    --text-1:           #1a202c;
+    --text-2:           #2d3748;
+    --text-3:           #4a5568;
+    --text-4:           #718096;
+    --text-5:           #a0aec0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    background-color: var(--bg);
+    color: var(--text-2);
+}
+
+#main-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: clip;
+}
+
+/* bare 태그 기본 색상 — 클래스 없는 h/p/label 등 포함 */
+h1, h2, h3, h4, h5, h6 { color: var(--text-1); }
+p, li, label, span, td, th { color: inherit; }
+
+/* ── 메인 콘텐츠 레이아웃 ── */
+/* ── 메인 콘텐츠 ── */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── 공지사항 / 최근 업데이트 페이지 뷰 ── */
+/* (반드시 .content-section 보다 먼저 선언 — 평소엔 .content-section{display:none}
+   이 이겨서 숨겨지고, .active 일 때만 표시된다) */
+.notice-update-view {
+    padding: 40px 28px;
+    display: flex;
+    justify-content: center;
+}
+.nu-page-wrap {
+    width: 100%;
+    max-width: 820px;
+}
+.nu-card {
+    padding: 32px 36px;
+}
+.nu-page-header {
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--border);
+}
+.nu-back-btn {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--text-4);
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: color 0.15s;
+    user-select: none;
+}
+.nu-back-btn:hover { color: var(--primary); }
+.nu-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.nu-title-row h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-1);
+}
+/* 페이지 뷰 아이템 여백 */
+#noticePageList .notice-full-item,
+#updatePageList .notice-full-item {
+    padding: 16px 4px;
+}
+#noticePageList .notice-full-header,
+#updatePageList .notice-full-header {
+    font-size: 14.5px;
+}
+
+/* ── 콘텐츠 섹션 · 카드 ── */
+.content-section {
+    flex: 1;
+    overflow-y: auto;
+    display: none;
+    padding: 28px;
+}
+
+.content-section.active { display: block; }
+
+.card {
+    background: var(--surface);
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    margin-bottom: 20px;
+}
+
+/* ── 공통 유틸 · 모달 · 드래그앤드롭 ── */
+/* ── 공통 유틸 ── */
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+.view-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.btn-submit {
+    background-color: var(--primary);
+    padding: 12px;
+    width: 100%;
+    font-size: 16px;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+/* ── 모달 ── */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--surface);
+    padding: 30px;
+    border-radius: 12px;
+    width: 400px;
+}
+
+.close-btn { cursor: pointer; float: right; font-size: 20px; }
+
+/* 드래그 앤 드롭 */
+.drop-zone {
+    border: 2px dashed var(--primary);
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    background-color: #e3f2fd;
+    color: var(--primary);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.drop-zone.dragover { background-color: var(--primary); color: white; }
+
+#image-preview {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: none;
+    margin-bottom: 20px;
+}
+
+/* ── 환경설정 ── */
+/* ── 환경설정 ── */
+.settings-btn {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 10px;
+    border-radius: 8px;
+    color: var(--text-5);
+    cursor: pointer;
+    font-size: 13px;
+    margin-bottom: 10px;
+    text-align: left;
+    transition: background 0.2s;
+}
+.settings-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+.settings-modal {
+    width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.settings-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 22px;
+}
+
+.stab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-4);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.stab.active { background: white; color: #1a202c; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+.stab-content { display: none; }
+.stab-content.active { display: block; }
+
+.sfield {
+    display: flex;
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 16px;
+}
+.sfield:last-child { border-bottom: none; }
+
+.sfield-label {
+    width: 80px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-3);
+    flex-shrink: 0;
+}
+
+.sfield-value {
+    font-size: 13.5px;
+    color: var(--text-2);
+    background: var(--surface-3);
+    padding: 7px 12px;
+    border-radius: 6px;
+    flex: 1;
+}
+
+.s-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13.5px;
+    outline: none;
+    color: var(--text-2);
+    width: auto;
+    margin: 0;
+}
+.s-input:focus { border-color: var(--primary); }
+
+.s-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23718096' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+    cursor: pointer;
+}
+
+.s-school-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+
+.s-school-wrap .s-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.s-school-suffix {
+    font-size: 13.5px;
+    color: var(--text-4);
+    white-space: nowrap;
+    font-weight: 500;
+    user-select: none;
+}
+
+.sfield-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sfield-readonly-badge {
+    font-size: 11px;
+    color: var(--text-5);
+    background: var(--surface-2);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-weight: 500;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.s-action-btn {
+    background: #edf2ff;
+    color: var(--primary);
+    border: 1px solid #bee3f8;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.s-action-btn:hover { background: var(--primary); color: white; }
+
+.s-save-btn {
+    width: 100%;
+    margin-top: 18px;
+    padding: 11px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.theme-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.theme-placeholder { font-size: 13px; color: #a0aec0; padding: 20px 0; }
+.theme-swatch {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: border 0.15s, transform 0.15s;
+}
+.theme-swatch:hover { transform: scale(1.1); }
+.theme-swatch.selected { border-color: #1a202c; }
+
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+#settingsModal {
+    align-items: flex-start;
+    padding-top: 80px;
+}
